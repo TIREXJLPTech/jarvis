@@ -14,7 +14,10 @@ import { getOrCreateConversation, logMessage, updateSessionId } from '../core/me
 export function createJlpWebApp(uiToken: string): Express {
   const app = express();
   app.use(express.json());
-  app.use(express.static(path.join(__dirname, 'public')));
+  // Caminho a partir do cwd (raiz do projeto), não de __dirname: em produção
+  // rodamos via ts-node direto (sem passo de build), então __dirname não
+  // reflete a estrutura de pastas de forma confiável.
+  app.use(express.static(path.join(process.cwd(), 'src', 'web', 'public')));
 
   const requireToken = (req: Request, res: Response, next: NextFunction) => {
     if (req.header('x-jlp-token') !== uiToken) {
