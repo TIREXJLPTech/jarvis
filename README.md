@@ -17,7 +17,7 @@ O que já vem pronto neste scaffold:
 
 O que só você consegue fazer (contas pessoais):
 
-- [ ] Criar o repositório no GitHub e dar `git push` neste código
+- [x] Criar o repositório no GitHub e dar `git push` neste código
 - [ ] Criar um projeto no Railway para o núcleo em nuvem (pode ficar vazio por
       enquanto — só provisionar)
 - [x] Gerar um token de acesso com `claude setup-token` (usa sua assinatura
