@@ -1,0 +1,21 @@
+{
+  "name": "jlp",
+  "version": "0.0.1",
+  "private": true,
+  "description": "JLP (Jarvis Lieutenant Personal) - assistente pessoal, nucleo Node.js/TypeScript. Fase 0: fundacao.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test:anthropic": "ts-node scripts/test-anthropic.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.246",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}
