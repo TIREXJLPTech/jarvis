@@ -1,0 +1,42 @@
+// Schema do Prisma para a memória persistente do JLP (Fase 1).
+//
+// ConversationSession: uma linha por conversa (por enquanto, uma por chat
+// do Telegram). Guarda o `sessionId` do Claude Agent SDK, que é o que
+// permite a conversa continuar de onde parou mesmo depois do bot reiniciar.
+//
+// Message: log de cada mensagem trocada. Não é usado pra montar contexto
+// ainda (quem faz isso é o `resume` de sessão do Agent SDK) - serve como
+// histórico/auditoria e vira a base pra memória de longo prazo com busca
+// semântica na Fase 7.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model ConversationSession {
+  id         String   @id @default(cuid())
+  channel    String // ex: "telegram"
+  externalId String // ex: id do chat no Telegram, como string
+  sessionId  String? // sessão atual do Claude Agent SDK (usada com `resume`)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  messages Message[]
+
+  @@unique([channel, externalId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversation   ConversationSession @relation(fields: [conversationId], references: [id])
+  conversationId String
+  role           String // "user" | "assistant"
+  content        String
+  costUsd        Float?
+  createdAt      DateTime @default(now())
+}
