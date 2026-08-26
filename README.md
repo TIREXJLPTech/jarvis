@@ -26,6 +26,26 @@ O que só você consegue fazer (contas pessoais):
       Raspberry Pi dedicado) — só importa a partir da Fase 3 (voz) e Fase 4
       (casa)
 
+## Fase 1 — Núcleo conversacional (concluída)
+
+- [x] Persona do JLP (`src/persona.ts`)
+- [x] Memória persistente por conversa (Prisma/Postgres) — sobrevive a reinícios
+- [x] Canal Telegram (`npm run start:telegram`)
+- [x] Canal web (`npm run start:web`) — chat local em `http://localhost:3000`,
+      protegido por token (`WEB_UI_TOKEN` no `.env`)
+- [x] Skills plugáveis: `hora`, `clima` (Open-Meteo, sem API key) e busca na
+      web (tool nativa `WebSearch` do Agent SDK) — ver `src/skills/README.md`
+
+Antes de rodar localmente, aplique a migration do Prisma:
+
+```bash
+npm run db:migrate
+```
+
+Se o Postgres for o do Railway, use a URL **pública** (Settings → Networking
+→ TCP Proxy do serviço Postgres) no `DATABASE_URL` local — o host interno
+(`postgres.railway.internal`) só funciona rodando de dentro do Railway.
+
 ## Autenticação: assinatura Pro em vez de pagar por token
 
 Como você já tem o plano **Claude Pro**, o JLP usa o **Claude Agent SDK**
@@ -65,7 +85,13 @@ Fase 0 está validado.
 ```
 src/
   config.ts        # leitura de variaveis de ambiente
-  skills/          # capacidades plugaveis (a partir da Fase 1)
+  persona.ts        # system prompt do JLP
+  core/
+    conversation.ts # askJLP - fala com o Claude Agent SDK, com skills e resume de sessao
+    memory.ts        # memoria persistente por conversa (Prisma)
+  telegram/          # canal Telegram
+  web/                # canal web (Express + pagina estatica)
+  skills/             # capacidades plugaveis (hora, clima, ...)
 scripts/
   test-anthropic.ts
 docs/
@@ -74,6 +100,6 @@ docs/
 
 ## Próximas fases
 
-Fase 1 adiciona o backend de chat (Telegram + web) e a primeira memória
-persistente, construído em cima do mesmo Claude Agent SDK. O detalhamento de
-todas as fases está no blueprint mantido junto com este projeto no Claude.
+O detalhamento de todas as fases (2 em diante: checagens automáticas, voz,
+casa conectada, integrações de dev, monitoramento de trabalho, memória de
+longo prazo...) está no blueprint mantido junto com este projeto no Claude.
