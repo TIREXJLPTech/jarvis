@@ -1,0 +1,69 @@
+import { tool } from '@anthropic-ai/claude-agent-sdk';
+import { z } from 'zod';
+
+// Códigos de tempo (WMO) usados pela Open-Meteo, resumidos em pt-BR.
+const DESCRICAO_POR_CODIGO: Record<number, string> = {
+  0: 'céu limpo',
+  1: 'poucas nuvens',
+  2: 'parcialmente nublado',
+  3: 'nublado',
+  45: 'neblina',
+  48: 'neblina com geada',
+  51: 'garoa fraca',
+  53: 'garoa moderada',
+  55: 'garoa forte',
+  61: 'chuva fraca',
+  63: 'chuva moderada',
+  65: 'chuva forte',
+  71: 'neve fraca',
+  73: 'neve moderada',
+  75: 'neve forte',
+  80: 'pancadas de chuva fracas',
+  81: 'pancadas de chuva moderadas',
+  82: 'pancadas de chuva fortes',
+  95: 'trovoadas',
+  96: 'trovoadas com granizo fraco',
+  99: 'trovoadas com granizo forte',
+};
+
+interface GeocodingResponse {
+  results?: Array<{ name: string; latitude: number; longitude: number; country: string }>;
+}
+
+interface ForecastResponse {
+  current: {
+    temperature_2m: number;
+    relative_humidity_2m: number;
+    weather_code: number;
+  };
+}
+
+export const climaSkill = tool(
+  'clima',
+  'Consulta a previsão do tempo atual (temperatura, umidade, condição) para uma cidade.',
+  { cidade: z.string().describe('Nome da cidade, ex: "Caxias do Sul"') },
+  async ({ cidade }) => {
+    const geoResp = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt`,
+    );
+    const geo = (await geoResp.json()) as GeocodingResponse;
+    const local = geo.results?.[0];
+
+    if (!local) {
+      return { content: [{ type: 'text', text: `Não encontrei a cidade "${cidade}".` }] };
+    }
+
+    const forecastResp = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${local.latitude}&longitude=${local.longitude}` +
+        '&current=temperature_2m,relative_humidity_2m,weather_code&timezone=auto',
+    );
+    const forecast = (await forecastResp.json()) as ForecastResponse;
+    const descricao = DESCRICAO_POR_CODIGO[forecast.current.weather_code] ?? 'condição não mapeada';
+
+    const texto =
+      `${local.name}, ${local.country}: ${forecast.current.temperature_2m}°C, ${descricao}, ` +
+      `umidade ${forecast.current.relative_humidity_2m}%.`;
+
+    return { content: [{ type: 'text', text: texto }] };
+  },
+);

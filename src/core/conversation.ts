@@ -1,5 +1,6 @@
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import { JLP_PERSONA } from '../persona';
+import { skillsMcpServers, skillsToolNames } from '../skills';
 
 export interface JlpReply {
   text: string;
@@ -26,8 +27,13 @@ export async function askJLP(prompt: string, resumeSessionId?: string): Promise<
     options: {
       model: 'claude-sonnet-5',
       systemPrompt: JLP_PERSONA,
-      tools: [],
-      maxTurns: 1,
+      mcpServers: skillsMcpServers,
+      // `tools` define o conjunto disponível; `allowedTools` libera esse
+      // mesmo conjunto pra execução automática, sem prompt de aprovação -
+      // necessário porque o JLP roda sem terminal interativo (bot).
+      tools: ['WebSearch', ...skillsToolNames],
+      allowedTools: ['WebSearch', ...skillsToolNames],
+      maxTurns: 6,
       maxBudgetUsd: 0.2,
       ...(resumeSessionId ? { resume: resumeSessionId } : {}),
     },
