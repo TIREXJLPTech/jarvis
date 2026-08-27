@@ -22,9 +22,9 @@ O que só você consegue fazer (contas pessoais):
       (ver seção "Deploy no Railway" abaixo)
 - [x] Gerar um token de acesso com `claude setup-token` (usa sua assinatura
       Pro) — já validado
-- [ ] Decidir qual será a "máquina local" (PC/notebook existente ou um
-      Raspberry Pi dedicado) — só importa a partir da Fase 3 (voz) e Fase 4
-      (casa)
+- [x] Decidir a "máquina local" — usando o PC do José por enquanto
+      (facilidade/rapidez); migrar pra Raspberry Pi dedicado fica em aberto
+      pra mais adiante
 
 ## Fase 1 — Núcleo conversacional (essencialmente pronta, 2 débitos técnicos)
 
@@ -122,6 +122,39 @@ Diferente do Google, **não precisa copiar nada pro `.env` depois** - o
 cache de token (MSAL) é salvo direto no Postgres (`AppState`), que já é
 compartilhado entre local e Railway. Só precisa de `MICROSOFT_CLIENT_ID`
 configurado nos dois lugares.
+
+## Fase 3 — Camada de Voz (pipeline validado, wake word pendente)
+
+Roda **só localmente** (precisa de microfone/alto-falante) — não faz parte
+do deploy no Railway. `npm run start:voice`.
+
+- [x] STT (ElevenLabs Scribe) + núcleo conversacional (mesmo `askJLP` dos
+      outros canais) + TTS (ElevenLabs) — testado ponta a ponta com áudio
+      real, funcionando
+- [ ] Wake word "Jarvis" (Picovoice Porcupine) — conta aguardando aprovação
+      de "uso comercial" da Picovoice (mesmo pra uso pessoal, mudança
+      recente deles). Enquanto isso, o gatilho é **push-to-talk** (aperta
+      Enter, fala, o silêncio corta a gravação sozinho) — só o "gatilho"
+      muda quando a wake word estiver disponível, o resto do pipeline é
+      idêntico. Ver `src/voice/index.ts`.
+
+Credenciais:
+```
+PICOVOICE_ACCESS_KEY=   # console.picovoice.ai - deixe vazio pra usar push-to-talk
+ELEVENLABS_API_KEY=     # elevenlabs.io -> Settings -> API Keys
+ELEVENLABS_VOICE_ID=    # elevenlabs.io -> Voices -> My Voices -> escolher uma voz -> copiar o ID
+```
+
+**Gotcha da API key da ElevenLabs:** por padrão a key não vem com permissão
+pra nada — ao criar, marque **"Access"** em "Text to Speech" e "Speech to
+Text" (as outras podem ficar "No Access").
+
+**Gotcha do Voice ID:** o plano free da ElevenLabs **não permite usar vozes
+de biblioteca via API** (erro 402 `paid_plan_required`), mesmo depois de
+"adicionar" a voz em "My Voices" - isso não muda a categoria dela. Solução:
+usar **Voice Design** (My Voices → Create Voice → gerar uma voz nova a
+partir de uma descrição de texto) - aí sim o ID funciona no free tier,
+porque é uma voz seu, não da biblioteca.
 
 ## Deploy no Railway
 
@@ -221,9 +254,12 @@ src/
     memory.ts        # memoria persistente por conversa (Prisma)
   telegram/          # canal Telegram (bot.ts) + reminders.ts (checagem de lembretes vencidos)
   web/                # canal web (Express + pagina estatica)
-  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, ...)
+  voice/              # camada de voz local (Fase 3) - STT/TTS ElevenLabs, wake word Porcupine
+  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, ...)
 scripts/
   test-anthropic.ts
+  google-auth-setup.ts
+  microsoft-auth-setup.ts
 docs/
   POLITICA-DADOS.md
 ```
@@ -231,9 +267,7 @@ docs/
 ## Próximas fases
 
 O detalhamento de todas as fases está no blueprint mantido junto com este
-projeto no Claude. Resumo: Fase 2 — Produtividade Pessoal (Google Calendar,
-triagem de e-mail, tarefas/lembretes, notas, briefing matinal); Fase 3 — voz;
-Fase 4 — casa conectada (Home Assistant); Fase 5 — assistente de
+projeto no Claude. Resumo: Fase 4 — casa conectada (Home Assistant); Fase 5 — assistente de
 desenvolvimento (GitHub/Railway); Fase 6 — monitoramento de sistemas da
 Irapuru (isolado, ver `docs/POLITICA-DADOS.md`); Fase 7 — memória de longo
 prazo com busca semântica e inteligência proativa; Fase 8 — segurança,
