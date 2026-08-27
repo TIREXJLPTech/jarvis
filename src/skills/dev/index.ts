@@ -1,6 +1,7 @@
 import { tool } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
 import { listRepos, searchOpenItems, listRecentCommits } from '../../core/github';
+import { listDeployStatuses } from '../../core/railway';
 
 function formatarData(iso: string): string {
   return new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' }).format(
@@ -81,6 +82,26 @@ export const listarCommitsSkill = tool(
       return { content: [{ type: 'text', text: texto || 'Nenhum commit encontrado.' }] };
     } catch (err) {
       return { content: [{ type: 'text', text: `Não consegui consultar o GitHub: ${(err as Error).message}` }] };
+    }
+  },
+);
+
+export const listarDeploysSkill = tool(
+  'listar_deploys',
+  'Lista o status do último deploy de cada serviço em todos os projetos do Railway de José.',
+  {},
+  async () => {
+    try {
+      const deploys = await listDeployStatuses();
+      if (deploys.length === 0) {
+        return { content: [{ type: 'text', text: 'Nenhum serviço encontrado no Railway.' }] };
+      }
+      const texto = deploys
+        .map((d) => `- [${d.project}] ${d.service}: ${d.status} (${formatarData(d.createdAt)})`)
+        .join('\n');
+      return { content: [{ type: 'text', text: texto }] };
+    } catch (err) {
+      return { content: [{ type: 'text', text: `Não consegui consultar o Railway: ${(err as Error).message}` }] };
     }
   },
 );

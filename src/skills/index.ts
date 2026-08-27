@@ -6,7 +6,7 @@ import { criarNotaSkill, listarNotasSkill } from './notas';
 import { criarEventoSkill, listarEventosSkill } from './calendario';
 import { listarEmailsSkill } from './email';
 import { listarDispositivosSkill, controlarDispositivoSkill } from './casa';
-import { listarRepositoriosSkill, listarPrsSkill, listarIssuesSkill, listarCommitsSkill } from './dev';
+import { listarRepositoriosSkill, listarPrsSkill, listarIssuesSkill, listarCommitsSkill, listarDeploysSkill } from './dev';
 
 const SERVER_NAME = 'jlp-skills';
 
@@ -27,6 +27,7 @@ const skills = [
   listarPrsSkill,
   listarIssuesSkill,
   listarCommitsSkill,
+  listarDeploysSkill,
 ];
 
 /**

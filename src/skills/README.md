@@ -57,7 +57,9 @@ Fase 5:
   `listar_issues` e `listar_commits`, via GitHub REST API
   (`src/core/github.ts`, Personal Access Token fine-grained). PRs/issues
   buscam em **todos os repositorios do usuario** (qualifier `user:` da
-  Search API), sem precisar listar nomes fixos.
+  Search API), sem precisar listar nomes fixos. Tambem `listar_deploys`,
+  via API GraphQL do Railway (`src/core/railway.ts`, token de time - ver
+  gotcha no README principal sobre `projects` vs `me { projects }`).
 
 Fora das skills MCP: `src/telegram/briefing.ts` monta e manda um briefing
 diario (clima + lembretes) as 7h, reaproveitando os handlers de `clima` e

@@ -215,14 +215,16 @@ antes, a compilação falha e trava o front-end inteiro (erro genérico
 `unknown_error` no console do navegador, tela fica presa em "A carregar...").
 Instalar esses dois pacotes do sistema resolve.
 
-## Fase 5 — Assistente de Desenvolvimento (GitHub em andamento)
+## Fase 5 — Assistente de Desenvolvimento (GitHub + Railway prontos)
 
 - [x] Skills `listar_repositorios`, `listar_prs`, `listar_issues`,
       `listar_commits` (`src/skills/dev`), via GitHub REST API
       (`src/core/github.ts`). PRs/issues cobrem **todos os repositórios**
       do usuário automaticamente (qualifier `user:` da Search API do
       GitHub) - não precisa listar nomes fixos
-- [ ] Integração com Railway API (deploys, logs, erros)
+- [x] Skill `listar_deploys` (`src/skills/dev`), via API GraphQL do Railway
+      (`src/core/railway.ts`) - status do último deploy de cada serviço,
+      em todos os projetos
 - [ ] Skill pra rodar/checar scripts locais com permissão explícita
 - [ ] Alertas proativos de eventos importantes
 
@@ -230,8 +232,17 @@ Credenciais:
 ```
 GITHUB_TOKEN=       # github.com/settings/tokens?type=beta - Fine-grained
                      # token, All repositories, Read-only em Contents/Issues/Pull requests
-RAILWAY_API_TOKEN=  # railway.app/account/tokens
+RAILWAY_API_TOKEN=  # railway.app/account/tokens - crie com Workspace = seu
+                     # workspace de time (não "No workspace"), senão o token
+                     # nao enxerga os projetos
 ```
+
+**Gotcha da API do Railway:** é GraphQL (`https://backboard.railway.app/graphql/v2`),
+não REST, e a doc oficial descreve o schema pra token de conta pessoal
+(`me { projects { ... } }`). Com um **token de time/workspace** (o que
+criamos aqui), esse campo `me` dá erro "Not Authorized" - a query certa é
+`projects { ... }` direto na raiz. Descoberto testando ao vivo contra a
+API, não pela documentação.
 
 ## Deploy no Railway
 
