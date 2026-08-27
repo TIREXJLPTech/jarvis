@@ -1,6 +1,6 @@
 import { Telegraf } from 'telegraf';
 import { askJLP } from '../core/conversation';
-import { getOrCreateConversation, logMessage, updateSessionId } from '../core/memory';
+import { getOrCreateConversation, logMessage, updateSessionId, setState } from '../core/memory';
 
 export function createJlpBot(token: string): Telegraf {
   const bot = new Telegraf(token);
@@ -19,6 +19,12 @@ export function createJlpBot(token: string): Telegraf {
 
   bot.command('id', async (ctx) => {
     return ctx.reply(`Chat ID: ${ctx.chat.id}`);
+  });
+
+  bot.on('location', async (ctx) => {
+    const { latitude, longitude } = ctx.message.location;
+    await setState('homeLocation', JSON.stringify({ lat: latitude, lon: longitude }));
+    return ctx.reply('Localização atualizada. Já posso usar ela pra clima e briefing matinal.');
   });
 
   bot.on('text', async (ctx) => {

@@ -63,13 +63,18 @@ Se o Postgres for o do Railway, use a URL **pública** (Settings → Networking
       lembrete tem hora marcada — ver `src/skills/lembretes` e
       `src/telegram/reminders.ts`
 - [x] Notas rápidas (`criar_nota`, `listar_notas`) — ver `src/skills/notas`
+- [x] Localização atual — José compartilha a localização no Telegram (clipe
+      → Localização) e o bot guarda em `AppState`; usada pela skill `clima`
+      quando ele não informa cidade ("que tempo faz aqui") e pelo briefing
+- [x] Briefing matinal automático — todo dia às 7h (horário de Brasília),
+      manda clima + lembretes pendentes por Telegram; ver
+      `src/telegram/briefing.ts`
 - [ ] Google Calendar (consultar, criar, lembrar) — precisa de credenciais
       OAuth no Google Cloud Console, ainda não criadas
 - [ ] Triagem/resumo de e-mail (Gmail/Outlook) — precisa definir provedor +
       credenciais OAuth
-- [ ] Briefing matinal automático
 
-Novo na `.env` pra lembretes notificarem por Telegram:
+Novo na `.env` pra lembretes/briefing notificarem por Telegram:
 ```
 TELEGRAM_OWNER_CHAT_ID=  # chat_id do José; descubra mandando /id pro bot
 ```

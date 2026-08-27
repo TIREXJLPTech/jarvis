@@ -1,5 +1,6 @@
 import { tool } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
+import { getState } from '../../core/memory';
 
 // Códigos de tempo (WMO) usados pela Open-Meteo, resumidos em pt-BR.
 const DESCRICAO_POR_CODIGO: Record<number, string> = {
@@ -38,19 +39,46 @@ interface ForecastResponse {
   };
 }
 
-export const climaSkill = tool(
-  'clima',
-  'Consulta a previsão do tempo atual (temperatura, umidade, condição) para uma cidade.',
-  { cidade: z.string().describe('Nome da cidade, ex: "Caxias do Sul"') },
-  async ({ cidade }) => {
+interface Local {
+  nome: string;
+  latitude: number;
+  longitude: number;
+}
+
+async function resolverLocal(cidade?: string): Promise<Local | { erro: string }> {
+  if (cidade) {
     const geoResp = await fetch(
       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt`,
     );
     const geo = (await geoResp.json()) as GeocodingResponse;
-    const local = geo.results?.[0];
+    const encontrado = geo.results?.[0];
+    if (!encontrado) return { erro: `Não encontrei a cidade "${cidade}".` };
+    return { nome: `${encontrado.name}, ${encontrado.country}`, latitude: encontrado.latitude, longitude: encontrado.longitude };
+  }
 
-    if (!local) {
-      return { content: [{ type: 'text', text: `Não encontrei a cidade "${cidade}".` }] };
+  const salvo = await getState('homeLocation');
+  if (!salvo) {
+    return {
+      erro:
+        'Não sei sua localização atual ainda. Peça pra José compartilhar a localização no Telegram ' +
+        '(clipe/anexo → Localização), ou informe o nome de uma cidade.',
+    };
+  }
+
+  const local = JSON.parse(salvo) as { lat: number; lon: number };
+  return { nome: 'sua localização atual', latitude: local.lat, longitude: local.lon };
+}
+
+export const climaSkill = tool(
+  'clima',
+  'Consulta a previsão do tempo atual (temperatura, umidade, condição) para uma cidade. ' +
+    'Se José não informar a cidade (ex: "que tempo faz aqui"), deixe o parâmetro de fora - ' +
+    'a skill usa a última localização que ele compartilhou no Telegram.',
+  { cidade: z.string().optional().describe('Nome da cidade. Deixe de fora para usar a localização atual de José.') },
+  async ({ cidade }) => {
+    const local = await resolverLocal(cidade);
+    if ('erro' in local) {
+      return { content: [{ type: 'text', text: local.erro }] };
     }
 
     const forecastResp = await fetch(
@@ -61,7 +89,7 @@ export const climaSkill = tool(
     const descricao = DESCRICAO_POR_CODIGO[forecast.current.weather_code] ?? 'condição não mapeada';
 
     const texto =
-      `${local.name}, ${local.country}: ${forecast.current.temperature_2m}°C, ${descricao}, ` +
+      `${local.nome}: ${forecast.current.temperature_2m}°C, ${descricao}, ` +
       `umidade ${forecast.current.relative_humidity_2m}%.`;
 
     return { content: [{ type: 'text', text: texto }] };

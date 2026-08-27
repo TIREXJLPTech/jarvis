@@ -58,3 +58,12 @@ model Note {
   content   String
   createdAt DateTime @default(now())
 }
+
+// Estado chave-valor simples, pra coisas que nao merecem tabela propria:
+// localizacao atual do Jose (compartilhada via Telegram), data do ultimo
+// briefing matinal enviado, etc.
+model AppState {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

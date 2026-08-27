@@ -20,7 +20,9 @@ Fase 1:
 - **hora** (`src/skills/hora`) - data/hora atual em America/Sao_Paulo, sem
   dependencia externa.
 - **clima** (`src/skills/clima`) - previsao do tempo atual por cidade, via
-  API publica da Open-Meteo (sem necessidade de API key).
+  API publica da Open-Meteo (sem necessidade de API key). Cidade e opcional:
+  sem ela, usa a ultima localizacao que Jose compartilhou no Telegram
+  (guardada em `AppState`, chave `homeLocation`).
 - **busca na web** - nao e uma skill custom; usa a tool nativa `WebSearch`
   do Claude Agent SDK, liberada direto em `options.tools`.
 
@@ -31,6 +33,12 @@ Fase 2:
   cada 60s, precisa de `TELEGRAM_OWNER_CHAT_ID` no `.env`.
 - **notas** (`src/skills/notas`) - `criar_nota` e `listar_notas`, tabela
   `Note` no Postgres.
+
+Fora das skills MCP: `src/telegram/briefing.ts` monta e manda um briefing
+diario (clima + lembretes) as 7h, reaproveitando os handlers de `clima` e
+`listar_lembretes` diretamente (sem passar pelo modelo) - checa a cada 60s
+se ja passou da hora e se ainda nao mandou hoje (`AppState`, chave
+`lastBriefingDate`), pra sobreviver a restart do container sem duplicar.
 
 Pra adicionar uma skill nova: criar a pasta com seu `tool()`, adicionar ao
 array `skills` em `src/skills/index.ts`, e pronto - o nome ja sai liberado
