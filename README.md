@@ -266,6 +266,12 @@ verdade). Quando a aprovação vier:
 - Escopo do blueprint: endpoints de rejeição fiscal (CTe/NFe, efrete),
   alertas antes de virar incidente, dashboard resumido de status
 
+**Nota de produto:** a intenção de longo prazo é o JLP virar um produto
+vendável no mercado, não só uso pessoal - então quando esta fase for
+implementada, desenhar pra conectar com **qualquer empresa** (config de
+credenciais/endpoints por empresa), não hardcoded pra Irapuru, que seria só
+o primeiro caso de uso.
+
 ## Deploy no Railway
 
 O JLP roda em produção como **dois serviços separados** no mesmo projeto
