@@ -69,8 +69,8 @@ Se o Postgres for o do Railway, use a URL **pública** (Settings → Networking
 - [x] Briefing matinal automático — todo dia às 7h (horário de Brasília),
       manda clima + lembretes pendentes por Telegram; ver
       `src/telegram/briefing.ts`
-- [ ] Google Calendar (consultar, criar, lembrar) — precisa de credenciais
-      OAuth no Google Cloud Console, ainda não criadas
+- [x] Google Calendar (`criar_evento`, `listar_eventos`) — ver
+      `src/skills/calendario` e "Google Calendar" abaixo
 - [ ] Triagem/resumo de e-mail (Gmail/Outlook) — precisa definir provedor +
       credenciais OAuth
 
@@ -78,6 +78,22 @@ Novo na `.env` pra lembretes/briefing notificarem por Telegram:
 ```
 TELEGRAM_OWNER_CHAT_ID=  # chat_id do José; descubra mandando /id pro bot
 ```
+
+### Google Calendar
+
+Credenciais em [console.cloud.google.com](https://console.cloud.google.com/):
+projeto → habilitar "Google Calendar API" → configurar tela de permissão
+OAuth (Externo, escopo `.../auth/calendar`, seu e-mail como usuário de
+teste) → criar credencial OAuth tipo "App para computador" → `Client ID` e
+`Client Secret` vão em `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` no `.env`.
+
+Depois, gera o refresh token (uma vez só, não expira sozinho):
+```bash
+npm run google:auth
+# abre a URL impressa no navegador, autoriza, e o terminal imprime o refresh token
+```
+Cole o valor em `GOOGLE_REFRESH_TOKEN` no `.env` (e no Railway, serviços
+`jlp-telegram` e `jlp-web`).
 
 ## Deploy no Railway
 

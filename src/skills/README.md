@@ -33,6 +33,11 @@ Fase 2:
   cada 60s, precisa de `TELEGRAM_OWNER_CHAT_ID` no `.env`.
 - **notas** (`src/skills/notas`) - `criar_nota` e `listar_notas`, tabela
   `Note` no Postgres.
+- **calendario** (`src/skills/calendario`) - `criar_evento` e `listar_eventos`,
+  via Google Calendar API (`src/core/google.ts`, OAuth com refresh token de
+  longa duracao - ver secao "Google Calendar" no README principal). Falha
+  graciosamente (mensagem de texto, nao trava a conversa) se as credenciais
+  nao estiverem configuradas.
 
 Fora das skills MCP: `src/telegram/briefing.ts` monta e manda um briefing
 diario (clima + lembretes) as 7h, reaproveitando os handlers de `clima` e

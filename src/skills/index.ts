@@ -3,6 +3,7 @@ import { horaSkill } from './hora';
 import { climaSkill } from './clima';
 import { criarLembreteSkill, listarLembretesSkill, concluirLembreteSkill } from './lembretes';
 import { criarNotaSkill, listarNotasSkill } from './notas';
+import { criarEventoSkill, listarEventosSkill } from './calendario';
 
 const SERVER_NAME = 'jlp-skills';
 
@@ -14,6 +15,8 @@ const skills = [
   concluirLembreteSkill,
   criarNotaSkill,
   listarNotasSkill,
+  criarEventoSkill,
+  listarEventosSkill,
 ];
 
 /**
