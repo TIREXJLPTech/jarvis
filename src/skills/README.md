@@ -61,6 +61,15 @@ Fase 5:
   via API GraphQL do Railway (`src/core/railway.ts`, token de time - ver
   gotcha no README principal sobre `projects` vs `me { projects }`).
 
+Fase 7:
+- **memoria** (`src/skills/memoria`) - `lembrar` e `buscar_memorias`, tabela
+  `Memory` no Postgres. Memoria de longo prazo de verdade: sobrevive a
+  qualquer restart/redeploy, e funciona entre conversas totalmente
+  diferentes (nao depende da sessao do Agent SDK). Busca hoje e por
+  palavra-chave (ILIKE) - busca semantica de verdade (embeddings) fica pra
+  quando tiver uma API de embeddings configurada. Persona instrui o modelo
+  a usar `lembrar` proativamente, sem esperar o Jose pedir.
+
 Fora das skills MCP: `src/telegram/briefing.ts` monta e manda um briefing
 diario (clima + lembretes) as 7h, reaproveitando os handlers de `clima` e
 `listar_lembretes` diretamente (sem passar pelo modelo) - checa a cada 60s

@@ -42,9 +42,11 @@ Débitos técnicos conhecidos (o blueprint original pedia isso na Fase 1, mas
 foi decidido seguir pra Fase 2 e voltar aqui depois):
 - [ ] Canal web deveria ser **Next.js**; o que existe é Express + HTML
       estático (funciona, mas não é o stack planejado)
-- [ ] Memória de **longo prazo** persistente (que sobrevive a reinício do
-      container) — hoje só existe memória de sessão via SDK, que se perde a
-      cada redeploy (ver "Limitação conhecida" na seção do Railway)
+- [x] Memória de **longo prazo** persistente — resolvida na Fase 7 (skills
+      `lembrar`/`buscar_memorias`, tabela `Memory`). A memória de *sessão*
+      via SDK ainda se perde a cada redeploy (ver "Limitação conhecida" na
+      seção do Railway), mas fatos/preferências importantes agora
+      sobrevivem via essa skill
 
 Antes de rodar localmente, aplique a migration do Prisma:
 
@@ -272,6 +274,22 @@ implementada, desenhar pra conectar com **qualquer empresa** (config de
 credenciais/endpoints por empresa), não hardcoded pra Irapuru, que seria só
 o primeiro caso de uso.
 
+## Fase 7 — Inteligência Proativa e Memória de Longo Prazo (núcleo pronto)
+
+- [x] Memória de longo prazo persistente (`lembrar`, `buscar_memorias` -
+      `src/skills/memoria`, tabela `Memory`) - sobrevive a qualquer
+      restart/redeploy, funciona entre conversas completamente diferentes
+      (testado: fato salvo numa conversa, recuperado do zero em outra).
+      Fecha o débito técnico que ficou aberto desde a Fase 1
+- [ ] Busca **semântica** de verdade (embeddings/RAG) - hoje é busca por
+      palavra-chave (ILIKE); evoluir quando fizer sentido configurar uma
+      API de embeddings
+- [ ] Reconhecimento de padrões/preferências automático (hoje depende do
+      modelo decidir usar `lembrar`, guiado pela persona)
+- [ ] Automações condicionais ("se X acontecer, faça Y")
+
+Esta é uma fase contínua (evolui junto com o uso real, sem "fim" definido).
+
 ## Deploy no Railway
 
 O JLP roda em produção como **dois serviços separados** no mesmo projeto
@@ -371,7 +389,7 @@ src/
   telegram/          # canal Telegram (bot.ts) + reminders.ts (checagem de lembretes vencidos)
   web/                # canal web (Express + pagina estatica)
   voice/              # camada de voz local (Fase 3) - STT/TTS ElevenLabs, wake word Porcupine
-  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, dev, ...)
+  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, dev, memoria, ...)
 scripts/
   test-anthropic.ts
   google-auth-setup.ts
@@ -383,7 +401,8 @@ docs/
 ## Próximas fases
 
 O detalhamento de todas as fases está no blueprint mantido junto com este
-projeto no Claude. Resumo: Fase 6 — monitoramento de sistemas da
-Irapuru (isolado, ver `docs/POLITICA-DADOS.md`); Fase 7 — memória de longo
-prazo com busca semântica e inteligência proativa; Fase 8 — segurança,
-mobilidade e polimento (transversal, começa junto com a Fase 1).
+projeto no Claude. Resumo do que falta: Fase 6 — monitoramento de sistemas
+da Irapuru, bloqueada até aprovação de segurança/TI (ver
+`docs/POLITICA-DADOS.md`); Fase 8 — segurança, mobilidade e polimento
+(transversal, começa junto com a Fase 1: Tailscale, backups automáticos,
+monitoramento de custo de APIs, logs de auditoria).

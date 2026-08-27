@@ -67,3 +67,15 @@ model AppState {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+// Fase 7 - memoria de longo prazo: fatos/preferencias que o proprio JLP
+// decide guardar durante uma conversa, e que sobrevivem a qualquer reinicio
+// (diferente da memoria de sessao do Agent SDK, que se perde a cada
+// restart do container). Busca hoje e por palavra-chave (ILIKE) - busca
+// semantica de verdade (embeddings) fica pra quando tiver uma API de
+// embeddings configurada.
+model Memory {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+}
