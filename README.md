@@ -18,8 +18,8 @@ O que já vem pronto neste scaffold:
 O que só você consegue fazer (contas pessoais):
 
 - [x] Criar o repositório no GitHub e dar `git push` neste código
-- [ ] Criar um projeto no Railway para o núcleo em nuvem (pode ficar vazio por
-      enquanto — só provisionar)
+- [x] Criar um projeto no Railway para o núcleo em nuvem — em produção
+      (ver seção "Deploy no Railway" abaixo)
 - [x] Gerar um token de acesso com `claude setup-token` (usa sua assinatura
       Pro) — já validado
 - [ ] Decidir qual será a "máquina local" (PC/notebook existente ou um
@@ -46,6 +46,48 @@ Se o Postgres for o do Railway, use a URL **pública** (Settings → Networking
 → TCP Proxy do serviço Postgres) no `DATABASE_URL` local — o host interno
 (`postgres.railway.internal`) só funciona rodando de dentro do Railway.
 
+## Deploy no Railway
+
+O JLP roda em produção como **dois serviços separados** no mesmo projeto
+Railway (junto com o Postgres): `jlp-telegram` e `jlp-web`, ambos apontando
+pro mesmo repo GitHub, branch `main`.
+
+Configuração de cada serviço (Settings → Deploy → Custom Start Command):
+
+```
+# jlp-telegram
+npm run db:deploy && node dist/src/telegram/index.js
+
+# jlp-web
+npm run db:deploy && node dist/src/web/index.js
+```
+
+Repare no `dist/src/...`, não `dist/...` — o `tsconfig.json` usa
+`rootDir: "."` (pra incluir também `scripts/`), então o `tsc` espelha a
+pasta `src/` inteira dentro de `dist/`.
+
+Variáveis necessárias em cada serviço (Variables):
+- `CLAUDE_CODE_OAUTH_TOKEN` — igual nos dois serviços (ver seção de
+  autenticação abaixo)
+- `DATABASE_URL` — referência de variável (`{}`) pro `DATABASE_URL` do
+  serviço Postgres, não digitar valor à mão
+- `jlp-telegram`: também `TELEGRAM_BOT_TOKEN`
+- `jlp-web`: também `WEB_UI_TOKEN`, e domínio público habilitado em
+  Settings → Networking → Generate Domain (porta precisa bater com o que o
+  servidor realmente escuta — conferir no log `✅ JLP no ar na web:
+  http://localhost:PORTA`, o Railway injeta a própria `PORT`)
+
+Só o `jlp-web` precisa de domínio público — o `jlp-telegram` só faz polling
+de saída pro Telegram, não recebe conexões.
+
+**Limitação conhecida:** o Claude Agent SDK guarda o histórico de sessão em
+disco local, não no Postgres. Como o container do Railway é efêmero, toda
+vez que um serviço reinicia (redeploy, crash) as sessões em andamento
+"esquecem" o contexto — o usuário só precisa mandar `/reset` (Telegram) ou
+clicar em "Reiniciar conversa" (web). O log de mensagens no Postgres
+continua intacto; só ainda não é usado pra reconstruir o contexto da
+conversa. Resolver isso é candidato a uma fase futura.
+
 ## Autenticação: assinatura Pro em vez de pagar por token
 
 Como você já tem o plano **Claude Pro**, o JLP usa o **Claude Agent SDK**
@@ -64,6 +106,12 @@ npm install -g @anthropic-ai/claude-code
 claude setup-token
 # abre o navegador, você autoriza com a conta Pro, e um token aparece no terminal
 ```
+
+**Atenção pra não confundir dois valores parecidos nesse fluxo:** a página do
+navegador mostra um "código de autenticação" curto que você cola *de volta
+no terminal* onde o comando está esperando; só depois disso o terminal
+imprime o **token final** (bem mais longo, começa com `sk-ant-oat01-`) — é
+esse último que vai em `.env`/Railway, nunca o código da página.
 
 Cole esse token em `.env`, na variável `CLAUDE_CODE_OAUTH_TOKEN`. O token vale
 por 1 ano.
