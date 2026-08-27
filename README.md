@@ -215,6 +215,24 @@ antes, a compilação falha e trava o front-end inteiro (erro genérico
 `unknown_error` no console do navegador, tela fica presa em "A carregar...").
 Instalar esses dois pacotes do sistema resolve.
 
+## Fase 5 — Assistente de Desenvolvimento (GitHub em andamento)
+
+- [x] Skills `listar_repositorios`, `listar_prs`, `listar_issues`,
+      `listar_commits` (`src/skills/dev`), via GitHub REST API
+      (`src/core/github.ts`). PRs/issues cobrem **todos os repositórios**
+      do usuário automaticamente (qualifier `user:` da Search API do
+      GitHub) - não precisa listar nomes fixos
+- [ ] Integração com Railway API (deploys, logs, erros)
+- [ ] Skill pra rodar/checar scripts locais com permissão explícita
+- [ ] Alertas proativos de eventos importantes
+
+Credenciais:
+```
+GITHUB_TOKEN=       # github.com/settings/tokens?type=beta - Fine-grained
+                     # token, All repositories, Read-only em Contents/Issues/Pull requests
+RAILWAY_API_TOKEN=  # railway.app/account/tokens
+```
+
 ## Deploy no Railway
 
 O JLP roda em produção como **dois serviços separados** no mesmo projeto
@@ -314,7 +332,7 @@ src/
   telegram/          # canal Telegram (bot.ts) + reminders.ts (checagem de lembretes vencidos)
   web/                # canal web (Express + pagina estatica)
   voice/              # camada de voz local (Fase 3) - STT/TTS ElevenLabs, wake word Porcupine
-  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, ...)
+  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, dev, ...)
 scripts/
   test-anthropic.ts
   google-auth-setup.ts
@@ -326,8 +344,7 @@ docs/
 ## Próximas fases
 
 O detalhamento de todas as fases está no blueprint mantido junto com este
-projeto no Claude. Resumo: Fase 5 — assistente de
-desenvolvimento (GitHub/Railway); Fase 6 — monitoramento de sistemas da
+projeto no Claude. Resumo: Fase 6 — monitoramento de sistemas da
 Irapuru (isolado, ver `docs/POLITICA-DADOS.md`); Fase 7 — memória de longo
 prazo com busca semântica e inteligência proativa; Fase 8 — segurança,
 mobilidade e polimento (transversal, começa junto com a Fase 1).

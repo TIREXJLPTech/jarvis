@@ -52,6 +52,13 @@ Fase 4:
   Assistant" no README principal). Falha graciosamente igual as outras
   skills de integracao externa se nao estiver configurada.
 
+Fase 5:
+- **dev** (`src/skills/dev`) - `listar_repositorios`, `listar_prs`,
+  `listar_issues` e `listar_commits`, via GitHub REST API
+  (`src/core/github.ts`, Personal Access Token fine-grained). PRs/issues
+  buscam em **todos os repositorios do usuario** (qualifier `user:` da
+  Search API), sem precisar listar nomes fixos.
+
 Fora das skills MCP: `src/telegram/briefing.ts` monta e manda um briefing
 diario (clima + lembretes) as 7h, reaproveitando os handlers de `clima` e
 `listar_lembretes` diretamente (sem passar pelo modelo) - checa a cada 60s
