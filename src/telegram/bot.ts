@@ -17,6 +17,10 @@ export function createJlpBot(token: string): Telegraf {
     return ctx.reply('Memória desta conversa reiniciada.');
   });
 
+  bot.command('id', async (ctx) => {
+    return ctx.reply(`Chat ID: ${ctx.chat.id}`);
+  });
+
   bot.on('text', async (ctx) => {
     const chatId = String(ctx.chat.id);
     await ctx.sendChatAction('typing');

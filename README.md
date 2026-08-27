@@ -26,15 +26,25 @@ O que só você consegue fazer (contas pessoais):
       Raspberry Pi dedicado) — só importa a partir da Fase 3 (voz) e Fase 4
       (casa)
 
-## Fase 1 — Núcleo conversacional (concluída)
+## Fase 1 — Núcleo conversacional (essencialmente pronta, 2 débitos técnicos)
 
 - [x] Persona do JLP (`src/persona.ts`)
-- [x] Memória persistente por conversa (Prisma/Postgres) — sobrevive a reinícios
+- [x] Memória de sessão por conversa (Prisma/Postgres) — funciona, mas não
+      sobrevive a reinício do container (ver "Limitação conhecida" abaixo)
 - [x] Canal Telegram (`npm run start:telegram`)
 - [x] Canal web (`npm run start:web`) — chat local em `http://localhost:3000`,
       protegido por token (`WEB_UI_TOKEN` no `.env`)
 - [x] Skills plugáveis: `hora`, `clima` (Open-Meteo, sem API key) e busca na
       web (tool nativa `WebSearch` do Agent SDK) — ver `src/skills/README.md`
+- [x] Deploy em produção no Railway (Telegram + web)
+
+Débitos técnicos conhecidos (o blueprint original pedia isso na Fase 1, mas
+foi decidido seguir pra Fase 2 e voltar aqui depois):
+- [ ] Canal web deveria ser **Next.js**; o que existe é Express + HTML
+      estático (funciona, mas não é o stack planejado)
+- [ ] Memória de **longo prazo** persistente (que sobrevive a reinício do
+      container) — hoje só existe memória de sessão via SDK, que se perde a
+      cada redeploy (ver "Limitação conhecida" na seção do Railway)
 
 Antes de rodar localmente, aplique a migration do Prisma:
 
@@ -45,6 +55,24 @@ npm run db:migrate
 Se o Postgres for o do Railway, use a URL **pública** (Settings → Networking
 → TCP Proxy do serviço Postgres) no `DATABASE_URL` local — o host interno
 (`postgres.railway.internal`) só funciona rodando de dentro do Railway.
+
+## Fase 2 — Produtividade Pessoal (em andamento)
+
+- [x] Lembretes/tarefas (`criar_lembrete`, `listar_lembretes`,
+      `concluir_lembrete`) com notificação proativa por Telegram quando o
+      lembrete tem hora marcada — ver `src/skills/lembretes` e
+      `src/telegram/reminders.ts`
+- [x] Notas rápidas (`criar_nota`, `listar_notas`) — ver `src/skills/notas`
+- [ ] Google Calendar (consultar, criar, lembrar) — precisa de credenciais
+      OAuth no Google Cloud Console, ainda não criadas
+- [ ] Triagem/resumo de e-mail (Gmail/Outlook) — precisa definir provedor +
+      credenciais OAuth
+- [ ] Briefing matinal automático
+
+Novo na `.env` pra lembretes notificarem por Telegram:
+```
+TELEGRAM_OWNER_CHAT_ID=  # chat_id do José; descubra mandando /id pro bot
+```
 
 ## Deploy no Railway
 
@@ -71,7 +99,9 @@ Variáveis necessárias em cada serviço (Variables):
   autenticação abaixo)
 - `DATABASE_URL` — referência de variável (`{}`) pro `DATABASE_URL` do
   serviço Postgres, não digitar valor à mão
-- `jlp-telegram`: também `TELEGRAM_BOT_TOKEN`
+- `jlp-telegram`: também `TELEGRAM_BOT_TOKEN` e `TELEGRAM_OWNER_CHAT_ID`
+  (Fase 2, notificação de lembretes — sem essa variável o serviço sobe
+  normal, só sem notificar lembretes vencidos)
 - `jlp-web`: também `WEB_UI_TOKEN`, e domínio público habilitado em
   Settings → Networking → Generate Domain (porta precisa bater com o que o
   servidor realmente escuta — conferir no log `✅ JLP no ar na web:
@@ -94,8 +124,8 @@ Como você já tem o plano **Claude Pro**, o JLP usa o **Claude Agent SDK**
 (não a API paga por token direto) — assim o uso do assistente conta dentro do
 limite normal da sua assinatura, sem gerar cobrança extra por enquanto.
 Ponto de atenção: esse consumo compartilha a mesma cota que você usa
-conversando no claude.ai/app — se o JLP ficar muito ativo (Fase 2 em
-diante, com checagens automáticas), pode valer a pena acompanhar se o limite
+conversando no claude.ai/app — se o JLP ficar muito ativo (lembretes
+automáticos, briefing matinal, etc.), pode valer a pena acompanhar se o limite
 do Pro está apertando; nesse caso dá pra trocar para a chave paga por token
 (`ANTHROPIC_API_KEY`) a qualquer momento, sem mudar o código.
 
@@ -137,9 +167,9 @@ src/
   core/
     conversation.ts # askJLP - fala com o Claude Agent SDK, com skills e resume de sessao
     memory.ts        # memoria persistente por conversa (Prisma)
-  telegram/          # canal Telegram
+  telegram/          # canal Telegram (bot.ts) + reminders.ts (checagem de lembretes vencidos)
   web/                # canal web (Express + pagina estatica)
-  skills/             # capacidades plugaveis (hora, clima, ...)
+  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, ...)
 scripts/
   test-anthropic.ts
 docs/
@@ -148,6 +178,11 @@ docs/
 
 ## Próximas fases
 
-O detalhamento de todas as fases (2 em diante: checagens automáticas, voz,
-casa conectada, integrações de dev, monitoramento de trabalho, memória de
-longo prazo...) está no blueprint mantido junto com este projeto no Claude.
+O detalhamento de todas as fases está no blueprint mantido junto com este
+projeto no Claude. Resumo: Fase 2 — Produtividade Pessoal (Google Calendar,
+triagem de e-mail, tarefas/lembretes, notas, briefing matinal); Fase 3 — voz;
+Fase 4 — casa conectada (Home Assistant); Fase 5 — assistente de
+desenvolvimento (GitHub/Railway); Fase 6 — monitoramento de sistemas da
+Irapuru (isolado, ver `docs/POLITICA-DADOS.md`); Fase 7 — memória de longo
+prazo com busca semântica e inteligência proativa; Fase 8 — segurança,
+mobilidade e polimento (transversal, começa junto com a Fase 1).

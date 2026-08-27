@@ -1,10 +1,20 @@
 import { createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk';
 import { horaSkill } from './hora';
 import { climaSkill } from './clima';
+import { criarLembreteSkill, listarLembretesSkill, concluirLembreteSkill } from './lembretes';
+import { criarNotaSkill, listarNotasSkill } from './notas';
 
 const SERVER_NAME = 'jlp-skills';
 
-const skills = [horaSkill, climaSkill];
+const skills = [
+  horaSkill,
+  climaSkill,
+  criarLembreteSkill,
+  listarLembretesSkill,
+  concluirLembreteSkill,
+  criarNotaSkill,
+  listarNotasSkill,
+];
 
 /**
  * Registra todas as skills como um único MCP server em processo, exposto ao

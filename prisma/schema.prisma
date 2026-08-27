@@ -40,3 +40,21 @@ model Message {
   costUsd        Float?
   createdAt      DateTime @default(now())
 }
+
+// Fase 2 - lembretes e notas. Assistente de usuário único (José), sem
+// necessidade de escopo por usuário/conversa.
+
+model Task {
+  id         String    @id @default(cuid())
+  content    String
+  dueAt      DateTime? // null = tarefa sem hora marcada, so lembrete de lista
+  done       Boolean   @default(false)
+  notifiedAt DateTime? // quando a notificacao de vencimento foi enviada
+  createdAt  DateTime  @default(now())
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+}

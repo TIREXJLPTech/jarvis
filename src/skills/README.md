@@ -14,14 +14,23 @@ src/skills/<nome-da-skill>/
   <nome>.test.ts # testes, quando fizer sentido
 ```
 
-Skills atuais (Fase 1):
+Skills atuais:
 
+Fase 1:
 - **hora** (`src/skills/hora`) - data/hora atual em America/Sao_Paulo, sem
   dependencia externa.
 - **clima** (`src/skills/clima`) - previsao do tempo atual por cidade, via
   API publica da Open-Meteo (sem necessidade de API key).
 - **busca na web** - nao e uma skill custom; usa a tool nativa `WebSearch`
   do Claude Agent SDK, liberada direto em `options.tools`.
+
+Fase 2:
+- **lembretes** (`src/skills/lembretes`) - `criar_lembrete`, `listar_lembretes`
+  e `concluir_lembrete`, com tabela `Task` no Postgres. Lembretes com `dueAt`
+  sao notificados por Telegram (ver `src/telegram/reminders.ts`), checagem a
+  cada 60s, precisa de `TELEGRAM_OWNER_CHAT_ID` no `.env`.
+- **notas** (`src/skills/notas`) - `criar_nota` e `listar_notas`, tabela
+  `Note` no Postgres.
 
 Pra adicionar uma skill nova: criar a pasta com seu `tool()`, adicionar ao
 array `skills` em `src/skills/index.ts`, e pronto - o nome ja sai liberado
