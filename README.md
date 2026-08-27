@@ -156,6 +156,24 @@ usar **Voice Design** (My Voices → Create Voice → gerar uma voz nova a
 partir de uma descrição de texto) - aí sim o ID funciona no free tier,
 porque é uma voz seu, não da biblioteca.
 
+## Fase 4 — Automação Residencial (código pronto, sem hardware ainda)
+
+- [x] Skills `listar_dispositivos` e `controlar_dispositivo`
+      (`src/skills/casa`), via API REST do Home Assistant
+      (`src/core/homeAssistant.ts`)
+- [ ] Home Assistant instalado de verdade (hoje não roda em lugar nenhum -
+      decidido rodar o código sem instância ao vivo por enquanto, pra não
+      depender de instalar WSL/Docker nesse PC de dev; o lugar certo pra
+      isso é um hub dedicado, ex: Raspberry Pi)
+- [ ] Dispositivos reais conectados (luzes, tomadas, sensores) — critério de
+      conclusão do blueprint é controlar 3+ de verdade
+
+Credenciais (quando o Home Assistant estiver rodando em algum lugar):
+```
+HOME_ASSISTANT_URL=    # ex: http://homeassistant.local:8123 ou http://IP:8123
+HOME_ASSISTANT_TOKEN=  # perfil do usuário no Home Assistant -> Long-Lived Access Tokens
+```
+
 ## Deploy no Railway
 
 O JLP roda em produção como **dois serviços separados** no mesmo projeto
@@ -255,7 +273,7 @@ src/
   telegram/          # canal Telegram (bot.ts) + reminders.ts (checagem de lembretes vencidos)
   web/                # canal web (Express + pagina estatica)
   voice/              # camada de voz local (Fase 3) - STT/TTS ElevenLabs, wake word Porcupine
-  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, ...)
+  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, ...)
 scripts/
   test-anthropic.ts
   google-auth-setup.ts
@@ -267,7 +285,7 @@ docs/
 ## Próximas fases
 
 O detalhamento de todas as fases está no blueprint mantido junto com este
-projeto no Claude. Resumo: Fase 4 — casa conectada (Home Assistant); Fase 5 — assistente de
+projeto no Claude. Resumo: Fase 5 — assistente de
 desenvolvimento (GitHub/Railway); Fase 6 — monitoramento de sistemas da
 Irapuru (isolado, ver `docs/POLITICA-DADOS.md`); Fase 7 — memória de longo
 prazo com busca semântica e inteligência proativa; Fase 8 — segurança,

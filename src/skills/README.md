@@ -44,6 +44,13 @@ Fase 2:
   Jose, nunca a da Irapuru (ver `docs/POLITICA-DADOS.md`). Falha
   graciosamente igual a `calendario` se nao estiver configurada.
 
+Fase 4:
+- **casa** (`src/skills/casa`) - `listar_dispositivos` e `controlar_dispositivo`,
+  via API REST do Home Assistant (`src/core/homeAssistant.ts`, token de
+  longa duracao). Codigo pronto mas **sem hardware real conectado ainda**
+  (ver secao "Home Assistant" no README principal) - falha graciosamente
+  igual as outras skills de integracao externa.
+
 Fora das skills MCP: `src/telegram/briefing.ts` monta e manda um briefing
 diario (clima + lembretes) as 7h, reaproveitando os handlers de `clima` e
 `listar_lembretes` diretamente (sem passar pelo modelo) - checa a cada 60s
