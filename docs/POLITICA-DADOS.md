@@ -37,3 +37,11 @@ interna.
 
 Este arquivo deve ser revisado no início da Fase 6, antes de qualquer
 integração com sistemas de trabalho ser codificada.
+
+## Status (2026-08-27)
+
+Revisado no início da Fase 6. José confirmou que a validação com
+segurança/TI da Irapuru (regra 3) **ainda não foi feita**. Por isso, a
+Fase 6 permanece sem nenhum código de integração — nenhum endpoint ou
+credencial real da Irapuru foi conectado. Atualizar esta seção quando a
+validação acontecer.

@@ -244,6 +244,28 @@ criamos aqui), esse campo `me` dá erro "Not Authorized" - a query certa é
 `projects { ... }` direto na raiz. Descoberto testando ao vivo contra a
 API, não pela documentação.
 
+## Fase 6 — Monitoramento de Sistemas de Trabalho (bloqueada por design)
+
+**Não iniciada de propósito.** Antes de qualquer credencial ou endpoint
+real da Irapuru ser conectado a este projeto, precisa validar com a
+segurança/TI da Irapuru se esse tipo de integração com um serviço de IA de
+terceiros (Claude/Anthropic) é permitido - e em que condições (rede, dados
+que podem trafegar pra API da Anthropic, retenção de logs). Ver
+`docs/POLITICA-DADOS.md`.
+
+Em 2026-08-27, José confirmou que essa validação **ainda não foi feita** -
+por isso não existe nenhum código de integração desta fase no repo (nem
+scaffolding especulativo contra endpoints que ainda não podemos tocar de
+verdade). Quando a aprovação vier:
+
+- Roda como **processo/serviço separado**, com seu próprio `.env` (nunca
+  reaproveitar `DATABASE_URL`/credenciais do núcleo pessoal) - ver regra 1
+  da política de dados
+- Nenhum dado de sistemas da Irapuru entra na memória de longo prazo do
+  Jarvis pessoal (regra 5 da política)
+- Escopo do blueprint: endpoints de rejeição fiscal (CTe/NFe, efrete),
+  alertas antes de virar incidente, dashboard resumido de status
+
 ## Deploy no Railway
 
 O JLP roda em produção como **dois serviços separados** no mesmo projeto
