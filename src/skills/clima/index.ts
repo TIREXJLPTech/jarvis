@@ -60,8 +60,8 @@ async function resolverLocal(cidade?: string): Promise<Local | { erro: string }>
   if (!salvo) {
     return {
       erro:
-        'Não sei sua localização atual ainda. Peça pra José compartilhar a localização no Telegram ' +
-        '(clipe/anexo → Localização), ou informe o nome de uma cidade.',
+        'Ainda não sei sua localização atual. Compartilhe ela no Telegram ' +
+        '(clipe/anexo → Localização), ou me diga o nome de uma cidade.',
     };
   }
 
