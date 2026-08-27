@@ -156,23 +156,64 @@ usar **Voice Design** (My Voices → Create Voice → gerar uma voz nova a
 partir de uma descrição de texto) - aí sim o ID funciona no free tier,
 porque é uma voz seu, não da biblioteca.
 
-## Fase 4 — Automação Residencial (código pronto, sem hardware ainda)
+## Fase 4 — Automação Residencial (integração validada em modo demo)
 
 - [x] Skills `listar_dispositivos` e `controlar_dispositivo`
       (`src/skills/casa`), via API REST do Home Assistant
       (`src/core/homeAssistant.ts`)
-- [ ] Home Assistant instalado de verdade (hoje não roda em lugar nenhum -
-      decidido rodar o código sem instância ao vivo por enquanto, pra não
-      depender de instalar WSL/Docker nesse PC de dev; o lugar certo pra
-      isso é um hub dedicado, ex: Raspberry Pi)
+- [x] Home Assistant Core rodando via WSL2/Ubuntu neste PC (modo `demo:`,
+      sem hardware real) - testado ponta a ponta: listar, ligar e confirmar
+      o estado de uma luz simulada
 - [ ] Dispositivos reais conectados (luzes, tomadas, sensores) — critério de
-      conclusão do blueprint é controlar 3+ de verdade
+      conclusão do blueprint é controlar 3+ de verdade; migrar o Home
+      Assistant pra um hub dedicado (ex: Raspberry Pi) fica pra quando
+      tiver o hardware
 
-Credenciais (quando o Home Assistant estiver rodando em algum lugar):
+Credenciais:
 ```
-HOME_ASSISTANT_URL=    # ex: http://homeassistant.local:8123 ou http://IP:8123
+HOME_ASSISTANT_URL=    # ex: http://localhost:8123 (local/WSL) ou http://IP:8123 (hub na rede)
 HOME_ASSISTANT_TOKEN=  # perfil do usuário no Home Assistant -> Long-Lived Access Tokens
 ```
+
+### Instalando o Home Assistant (dev/teste, via WSL2)
+
+Home Assistant **não roda em Windows nativo** (usa `os.fchmod`, só existe em
+Linux/Mac) - precisa de WSL2:
+
+```powershell
+# PowerShell como Administrador
+wsl --install
+```
+
+Dentro do Ubuntu (WSL):
+```bash
+sudo apt-get update
+sudo apt-get install -y python3-pip python3-venv python3-full python3-dev build-essential
+python3 -m venv ~/home-assistant/venv
+source ~/home-assistant/venv/bin/activate
+pip install homeassistant
+
+mkdir -p ~/home-assistant/config
+cat > ~/home-assistant/config/configuration.yaml << 'EOF'
+default_config:
+demo:
+EOF
+
+hass -c ~/home-assistant/config
+```
+
+Depois, `http://localhost:8123` funciona direto no navegador do Windows
+(WSL2 encaminha a porta automaticamente). Cria o usuário admin no
+assistente inicial, depois gera o token em **perfil → Long-Lived Access
+Tokens**.
+
+**Gotcha:** `default_config:` tenta carregar o recurso de voz nativo do
+Home Assistant (`assist_pipeline`), que depende de dois pacotes Python que
+precisam compilar do zero (`pymicro-vad`, `pyspeex-noise` - sem wheel pronta
+pra Python 3.14 ainda). Sem `python3-dev` + `build-essential` instalados
+antes, a compilação falha e trava o front-end inteiro (erro genérico
+`unknown_error` no console do navegador, tela fica presa em "A carregar...").
+Instalar esses dois pacotes do sistema resolve.
 
 ## Deploy no Railway
 

@@ -47,9 +47,10 @@ Fase 2:
 Fase 4:
 - **casa** (`src/skills/casa`) - `listar_dispositivos` e `controlar_dispositivo`,
   via API REST do Home Assistant (`src/core/homeAssistant.ts`, token de
-  longa duracao). Codigo pronto mas **sem hardware real conectado ainda**
-  (ver secao "Home Assistant" no README principal) - falha graciosamente
-  igual as outras skills de integracao externa.
+  longa duracao). Testado ponta a ponta contra um Home Assistant rodando
+  via WSL2 em modo `demo:` (sem hardware real ainda - ver secao "Home
+  Assistant" no README principal). Falha graciosamente igual as outras
+  skills de integracao externa se nao estiver configurada.
 
 Fora das skills MCP: `src/telegram/briefing.ts` monta e manda um briefing
 diario (clima + lembretes) as 7h, reaproveitando os handlers de `clima` e
