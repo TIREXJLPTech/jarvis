@@ -38,6 +38,11 @@ Fase 2:
   longa duracao - ver secao "Google Calendar" no README principal). Falha
   graciosamente (mensagem de texto, nao trava a conversa) se as credenciais
   nao estiverem configuradas.
+- **email** (`src/skills/email`) - `listar_emails`, via Microsoft Graph API
+  (`src/core/microsoft.ts`, MSAL com fluxo PKCE - ver secao "Outlook
+  pessoal" no README principal). Acessa **so a conta pessoal** do Outlook de
+  Jose, nunca a da Irapuru (ver `docs/POLITICA-DADOS.md`). Falha
+  graciosamente igual a `calendario` se nao estiver configurada.
 
 Fora das skills MCP: `src/telegram/briefing.ts` monta e manda um briefing
 diario (clima + lembretes) as 7h, reaproveitando os handlers de `clima` e

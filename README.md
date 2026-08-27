@@ -56,7 +56,7 @@ Se o Postgres for o do Railway, use a URL **pública** (Settings → Networking
 → TCP Proxy do serviço Postgres) no `DATABASE_URL` local — o host interno
 (`postgres.railway.internal`) só funciona rodando de dentro do Railway.
 
-## Fase 2 — Produtividade Pessoal (em andamento)
+## Fase 2 — Produtividade Pessoal (concluída)
 
 - [x] Lembretes/tarefas (`criar_lembrete`, `listar_lembretes`,
       `concluir_lembrete`) com notificação proativa por Telegram quando o
@@ -71,8 +71,9 @@ Se o Postgres for o do Railway, use a URL **pública** (Settings → Networking
       `src/telegram/briefing.ts`
 - [x] Google Calendar (`criar_evento`, `listar_eventos`) — ver
       `src/skills/calendario` e "Google Calendar" abaixo
-- [ ] Triagem/resumo de e-mail (Gmail/Outlook) — precisa definir provedor +
-      credenciais OAuth
+- [x] Triagem/resumo de e-mail (`listar_emails`) — só a conta **pessoal** do
+      Outlook de José (nunca a da Irapuru, ver política de separação de
+      dados); ver `src/skills/email` e "Outlook pessoal" abaixo
 
 Novo na `.env` pra lembretes/briefing notificarem por Telegram:
 ```
@@ -94,6 +95,33 @@ npm run google:auth
 ```
 Cole o valor em `GOOGLE_REFRESH_TOKEN` no `.env` (e no Railway, serviços
 `jlp-telegram` e `jlp-web`).
+
+### Outlook pessoal
+
+Credenciais em [entra.microsoft.com](https://entra.microsoft.com/) → Registros
+de aplicativo → Novo registro → Tipos de conta: **"Contas em qualquer
+diretório organizacional e contas pessoais da Microsoft"** → URI de
+redirecionamento tipo "Cliente público/nativo (desktop)":
+`http://localhost:53683`. Só o `Client ID` vai em `MICROSOFT_CLIENT_ID` no
+`.env` - esse fluxo usa PKCE, sem client secret.
+
+**Gotcha:** contas Microsoft pessoais sem nenhum tenant/diretório associado
+não conseguem registrar apps direto (erro "a capacidade de criar
+aplicativos fora de um diretório foi preterida"). Precisa de um tenant pra
+"hospedar" o registro - qualquer um serve (mesmo um de outra
+organização/negócio, como o `JLPTech`), já que o tipo de conta "contas
+pessoais" no registro é o que determina quem consegue autenticar de
+verdade, não o tenant onde o app foi criado.
+
+Depois, autoriza uma vez:
+```bash
+npm run microsoft:auth
+# abre a URL impressa no navegador, autoriza com a conta Outlook pessoal
+```
+Diferente do Google, **não precisa copiar nada pro `.env` depois** - o
+cache de token (MSAL) é salvo direto no Postgres (`AppState`), que já é
+compartilhado entre local e Railway. Só precisa de `MICROSOFT_CLIENT_ID`
+configurado nos dois lugares.
 
 ## Deploy no Railway
 
@@ -120,6 +148,9 @@ Variáveis necessárias em cada serviço (Variables):
   autenticação abaixo)
 - `DATABASE_URL` — referência de variável (`{}`) pro `DATABASE_URL` do
   serviço Postgres, não digitar valor à mão
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` e
+  `MICROSOFT_CLIENT_ID` — iguais nos dois serviços (Fase 2, calendário e
+  e-mail)
 - `jlp-telegram`: também `TELEGRAM_BOT_TOKEN` e `TELEGRAM_OWNER_CHAT_ID`
   (Fase 2, notificação de lembretes — sem essa variável o serviço sobe
   normal, só sem notificar lembretes vencidos)
