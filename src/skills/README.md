@@ -70,11 +70,22 @@ Fase 7:
   quando tiver uma API de embeddings configurada. Persona instrui o modelo
   a usar `lembrar` proativamente, sem esperar o Jose pedir.
 
-Fora das skills MCP: `src/telegram/briefing.ts` monta e manda um briefing
-diario (clima + lembretes) as 7h, reaproveitando os handlers de `clima` e
-`listar_lembretes` diretamente (sem passar pelo modelo) - checa a cada 60s
-se ja passou da hora e se ainda nao mandou hoje (`AppState`, chave
-`lastBriefingDate`), pra sobreviver a restart do container sem duplicar.
+Fase 8:
+- **custos** (`src/skills/custos`) - `resumo_custos`, soma o `costUsd` (ja
+  logado em `Message` desde a Fase 1) dos ultimos N dias, com total e
+  media diaria.
+
+Fora das skills MCP:
+- `src/telegram/briefing.ts` monta e manda um briefing diario (clima +
+  lembretes) as 7h, reaproveitando os handlers de `clima` e
+  `listar_lembretes` diretamente (sem passar pelo modelo) - checa a cada 60s
+  se ja passou da hora e se ainda nao mandou hoje (`AppState`, chave
+  `lastBriefingDate`), pra sobreviver a restart do container sem duplicar.
+- `src/telegram/backup.ts` + `src/core/backup.ts` mandam um backup diario
+  (as 3h) com um snapshot JSON de todas as tabelas, como arquivo pro
+  proprio Jose no Telegram - mesmo padrao de envio unico por dia do
+  briefing (`AppState.lastBackupDate`). Sem `pg_dump`/binario externo de
+  proposito - usa o Prisma Client, que ja conhece o schema.
 
 Pra adicionar uma skill nova: criar a pasta com seu `tool()`, adicionar ao
 array `skills` em `src/skills/index.ts`, e pronto - o nome ja sai liberado

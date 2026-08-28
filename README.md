@@ -290,6 +290,20 @@ o primeiro caso de uso.
 
 Esta é uma fase contínua (evolui junto com o uso real, sem "fim" definido).
 
+## Fase 8 — Segurança, Mobilidade e Polimento (em andamento)
+
+- [x] Monitoramento de custo de API (`resumo_custos` -
+      `src/skills/custos`) - soma o `costUsd` já logado desde a Fase 1
+- [x] Backup automático (`src/telegram/backup.ts` +
+      `src/core/backup.ts`) - snapshot JSON diário (3h) de todas as
+      tabelas, mandado como arquivo pro José via Telegram. Sem
+      `pg_dump`/binário externo - usa o Prisma Client
+- [ ] Acesso remoto seguro via Tailscale - adiado até ter um caso de uso
+      real (quando o Home Assistant sair do modo demo local pra um hub de
+      verdade, ou a camada de voz precisar de acesso remoto)
+- [ ] Logs de auditoria formais, rate limiting no canal web
+- [ ] PWA (se necessário)
+
 ## Deploy no Railway
 
 O JLP roda em produção como **dois serviços separados** no mesmo projeto
@@ -389,7 +403,7 @@ src/
   telegram/          # canal Telegram (bot.ts) + reminders.ts (checagem de lembretes vencidos)
   web/                # canal web (Express + pagina estatica)
   voice/              # camada de voz local (Fase 3) - STT/TTS ElevenLabs, wake word Porcupine
-  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, dev, memoria, ...)
+  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, dev, memoria, custos, ...)
 scripts/
   test-anthropic.ts
   google-auth-setup.ts
@@ -403,6 +417,5 @@ docs/
 O detalhamento de todas as fases está no blueprint mantido junto com este
 projeto no Claude. Resumo do que falta: Fase 6 — monitoramento de sistemas
 da Irapuru, bloqueada até aprovação de segurança/TI (ver
-`docs/POLITICA-DADOS.md`); Fase 8 — segurança, mobilidade e polimento
-(transversal, começa junto com a Fase 1: Tailscale, backups automáticos,
-monitoramento de custo de APIs, logs de auditoria).
+`docs/POLITICA-DADOS.md`); resto da Fase 8 — Tailscale, logs de auditoria
+formais, rate limiting, PWA.

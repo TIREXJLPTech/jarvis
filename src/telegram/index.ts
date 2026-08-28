@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { createJlpBot } from './bot';
 import { startReminderScheduler } from './reminders';
 import { startMorningBriefing } from './briefing';
+import { startDailyBackup } from './backup';
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const ownerChatId = process.env.TELEGRAM_OWNER_CHAT_ID;
@@ -20,9 +21,10 @@ console.log('✅ JLP no ar no Telegram. Ctrl+C para encerrar.');
 if (ownerChatId) {
   startReminderScheduler(bot, ownerChatId);
   startMorningBriefing(bot, ownerChatId);
-  console.log('✅ Checagem de lembretes e briefing matinal ativos.');
+  startDailyBackup(bot, ownerChatId);
+  console.log('✅ Checagem de lembretes, briefing matinal e backup diário ativos.');
 } else {
-  console.warn('⚠️ TELEGRAM_OWNER_CHAT_ID não configurado - lembretes e briefing não vão notificar. Use /id no bot pra descobrir o valor.');
+  console.warn('⚠️ TELEGRAM_OWNER_CHAT_ID não configurado - lembretes, briefing e backup não vão notificar. Use /id no bot pra descobrir o valor.');
 }
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
