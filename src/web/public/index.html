@@ -14,6 +14,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="JLP" />
+
+<!-- Fonte de destaque (mensagens, cabecalho, nucleo) - mais marcante que a
+     fonte de sistema padrao. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap" rel="stylesheet" />
+
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -37,9 +44,10 @@
     align-items: center;
   }
   header h1 {
-    font-size: 0.85rem;
+    font-family: 'ADLaM Display', system-ui, sans-serif;
+    font-size: 0.95rem;
     margin: 0;
-    font-weight: 600;
+    font-weight: 400;
     letter-spacing: 0.12em;
     color: #6b7280;
   }
@@ -271,6 +279,7 @@
   }
 
   #hud-status {
+    font-family: 'ADLaM Display', system-ui, sans-serif;
     font-weight: 400;
     font-size: 0.69rem;
     letter-spacing: 0.34em;
@@ -852,13 +861,14 @@
 
   .jlp-word {
     font-family:
+      "ADLaM Display",
       "Segoe UI",
       Arial,
       sans-serif;
 
-    font-size: 31px;
+    font-size: 29px;
 
-    font-weight: 700;
+    font-weight: 400;
 
     letter-spacing: 5px;
 
@@ -1199,7 +1209,16 @@
     flex-direction: column;
     gap: 0.5rem;
   }
-  .msg { max-width: 75%; padding: 0.5rem 0.75rem; border-radius: 10px; white-space: pre-wrap; line-height: 1.4; }
+  .msg {
+    max-width: 75%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+    white-space: pre-wrap;
+    font-family: 'ADLaM Display', system-ui, -apple-system, sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+  }
   .msg.user { align-self: flex-end; background: #2563eb; color: white; }
   .msg.assistant { align-self: flex-start; background: #14171d; border: 1px solid #1e222b; }
   .msg.system { align-self: center; color: #6b7280; font-size: 0.85rem; }
