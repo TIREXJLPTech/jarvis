@@ -36,6 +36,10 @@ import { pcmToWav, int16FramesToBuffer } from './wav';
 const ACCESS_KEY = process.env.PICOVOICE_ACCESS_KEY;
 const WAKE_WORD_ENGINE = process.env.WAKE_WORD_ENGINE; // 'openwakeword' | undefined
 const PYTHON_PATH = process.env.PYTHON_PATH || 'python';
+// -1 = dispositivo padrao do sistema (comportamento original). Util fixar um
+// indice especifico (rode `PvRecorder.getAvailableDevices()` pra listar) se
+// o padrao for um headset Bluetooth que cai a leitura durante escuta longa.
+const MIC_DEVICE_INDEX = process.env.MIC_DEVICE_INDEX ? Number(process.env.MIC_DEVICE_INDEX) : -1;
 const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM'; // Rachel (padrão ElevenLabs)
 const TTS_SAMPLE_RATE = 16000;
 const DEFAULT_FRAME_LENGTH = 512;
@@ -146,7 +150,7 @@ async function main() {
     : null;
   const frameLength = porcupine?.frameLength ?? DEFAULT_FRAME_LENGTH;
 
-  const recorder = new PvRecorder(frameLength);
+  const recorder = new PvRecorder(frameLength, MIC_DEVICE_INDEX);
   recorder.start();
 
   const rl = usandoWakeWord ? null : readline.createInterface({ input: process.stdin, output: process.stdout });
