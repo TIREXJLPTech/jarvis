@@ -2002,6 +2002,29 @@
   let tokenWaiters = [];
   const player = new Audio();
 
+  // Safari/iOS so libera player.play() se a chamada acontecer dentro do
+  // gesto de toque original (sem nenhum await no meio) - como a fala real
+  // so chega depois de esperar o chat responder, precisamos "destravar" o
+  // MESMO elemento <audio> tocando um clipe silencioso ainda dentro do
+  // toque; depois disso, trocar o src e chamar play() de novo (mesmo em
+  // contexto assincrono) continua funcionando pro resto da sessao.
+  const SILENT_AUDIO_DATA_URI =
+    'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==';
+  let audioPrimed = false;
+  let primerTocando = false;
+
+  function primeAudioElement() {
+    if (audioPrimed) return;
+    audioPrimed = true;
+    primerTocando = true;
+    player.src = SILENT_AUDIO_DATA_URI;
+    player
+      .play()
+      .then(() => player.pause())
+      .catch(() => {})
+      .finally(() => { primerTocando = false; });
+  }
+
   async function falar(texto) {
     try {
       const resp = await fetch('/api/speak', {
@@ -2020,10 +2043,10 @@
     }
   }
 
-  player.addEventListener('playing', () => { setJLPState('speaking'); startSpeakingAnalyser(); });
-  player.addEventListener('ended', () => { stopSpeakingAnalyser(); setJLPState('idle'); });
-  player.addEventListener('pause', () => { stopSpeakingAnalyser(); setJLPState('idle'); });
-  player.addEventListener('error', () => { stopSpeakingAnalyser(); setJLPState('idle'); });
+  player.addEventListener('playing', () => { if (primerTocando) return; setJLPState('speaking'); startSpeakingAnalyser(); });
+  player.addEventListener('ended', () => { if (primerTocando) return; stopSpeakingAnalyser(); setJLPState('idle'); });
+  player.addEventListener('pause', () => { if (primerTocando) return; stopSpeakingAnalyser(); setJLPState('idle'); });
+  player.addEventListener('error', () => { if (primerTocando) return; stopSpeakingAnalyser(); setJLPState('idle'); });
 
   function addMessage(role, text) {
     const el = document.createElement('div');
@@ -2096,6 +2119,7 @@
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     getAudioContext();
+    primeAudioElement();
     enviarMensagem(input.value.trim());
   });
 
@@ -2171,6 +2195,7 @@
 
   micBtn.addEventListener('click', async () => {
     getAudioContext();
+    primeAudioElement();
     if (recording) {
       pararGravacao();
       return;
