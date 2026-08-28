@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import readline from 'node:readline';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn, type ChildProcessByStdio } from 'node:child_process';
+import type { Writable, Readable } from 'node:stream';
 import { Porcupine, BuiltinKeyword } from '@picovoice/porcupine-node';
 import { PvRecorder } from '@picovoice/pvrecorder-node';
 import { getElevenLabsClient } from '../core/elevenlabs';
@@ -12,13 +13,19 @@ import { getOrCreateConversation, logMessage, updateSessionId } from '../core/me
 import { pcmToWav, int16FramesToBuffer } from './wav';
 
 /**
- * Camada de voz local (Fase 3). Duas formas de acionar a gravação:
+ * Camada de voz local (Fase 3). Três formas de acionar a gravação:
  *
- * - Wake word "Jarvis" (Picovoice Porcupine), se PICOVOICE_ACCESS_KEY estiver
- *   configurado - modo final, sem teclado.
- * - Push-to-talk (aperta Enter), se não estiver - fallback pra não travar o
- *   desenvolvimento enquanto uma conta do Picovoice aguarda aprovação. Só
- *   muda o "gatilho"; STT, núcleo conversacional e TTS são os mesmos.
+ * - Wake word "Jarvis" via Picovoice Porcupine, se PICOVOICE_ACCESS_KEY
+ *   estiver configurado - só ficou de exemplo/legado: a Picovoice negou de
+ *   vez o trial gratuito (2026-08-27), então esse caminho não funciona na
+ *   prática a menos que pague o Picovoice.
+ * - Wake word "hey jarvis" via openWakeWord (WAKE_WORD_ENGINE=openwakeword)
+ *   - alternativa gratuita: um processo Python (scripts/wake_word/detect.py)
+ *   roda o modelo pré-treinado "hey_jarvis" e avisa este processo via
+ *   stdout quando detecta. Ver OpenWakeWordBridge abaixo.
+ * - Push-to-talk (aperta Enter), se nenhum dos dois acima estiver
+ *   configurado - fallback original. Só muda o "gatilho"; STT, núcleo
+ *   conversacional e TTS são os mesmos nos três modos.
  *
  * Depois disso: transcreve (ElevenLabs Scribe), manda pro mesmo núcleo
  * conversacional das outras interfaces (askJLP), e fala a resposta
@@ -27,6 +34,8 @@ import { pcmToWav, int16FramesToBuffer } from './wav';
  */
 
 const ACCESS_KEY = process.env.PICOVOICE_ACCESS_KEY;
+const WAKE_WORD_ENGINE = process.env.WAKE_WORD_ENGINE; // 'openwakeword' | undefined
+const PYTHON_PATH = process.env.PYTHON_PATH || 'python';
 const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM'; // Rachel (padrão ElevenLabs)
 const TTS_SAMPLE_RATE = 16000;
 const DEFAULT_FRAME_LENGTH = 512;
@@ -86,9 +95,55 @@ async function falar(texto: string): Promise<void> {
   }
 }
 
+/**
+ * Ponte com o processo Python que roda o openWakeWord (scripts/wake_word/detect.py).
+ * Este processo não tem microfone próprio - o Node grava (via PvRecorder,
+ * já usado pros outros dois modos) e alimenta cada quadro pro stdin do
+ * Python; quando o Python detecta "hey jarvis", ele imprime "WAKE" em
+ * stdout, e essa classe só guarda essa flag pra o loop de escuta consumir.
+ */
+class OpenWakeWordBridge {
+  private readonly proc: ChildProcessByStdio<Writable, Readable, null>;
+  private woken = false;
+
+  constructor(pythonPath: string, scriptPath: string) {
+    this.proc = spawn(pythonPath, [scriptPath], { stdio: ['pipe', 'pipe', 'inherit'] });
+    this.proc.on('error', (err) => {
+      console.error('❌ Não consegui iniciar o processo Python do openWakeWord:', err.message);
+      console.error('   Confira se o Python está instalado e as dependências de scripts/wake_word/requirements.txt.');
+    });
+
+    const rl = readline.createInterface({ input: this.proc.stdout });
+    rl.on('line', (line) => {
+      if (line.trim() === 'WAKE') this.woken = true;
+    });
+  }
+
+  feed(frame: Int16Array): void {
+    this.proc.stdin.write(Buffer.from(frame.buffer, frame.byteOffset, frame.byteLength));
+  }
+
+  /** Consome o estado de "acordado" - true só na primeira checagem depois da detecção. */
+  consumeWake(): boolean {
+    if (!this.woken) return false;
+    this.woken = false;
+    return true;
+  }
+
+  dispose(): void {
+    this.proc.kill();
+  }
+}
+
 async function main() {
-  const usandoWakeWord = Boolean(ACCESS_KEY);
-  const porcupine = usandoWakeWord ? new Porcupine(ACCESS_KEY!, [BuiltinKeyword.JARVIS], [0.6]) : null;
+  const usandoPorcupine = Boolean(ACCESS_KEY);
+  const usandoOpenWakeWord = !usandoPorcupine && WAKE_WORD_ENGINE === 'openwakeword';
+  const usandoWakeWord = usandoPorcupine || usandoOpenWakeWord;
+
+  const porcupine = usandoPorcupine ? new Porcupine(ACCESS_KEY!, [BuiltinKeyword.JARVIS], [0.6]) : null;
+  const wakeBridge = usandoOpenWakeWord
+    ? new OpenWakeWordBridge(PYTHON_PATH, path.join(process.cwd(), 'scripts', 'wake_word', 'detect.py'))
+    : null;
   const frameLength = porcupine?.frameLength ?? DEFAULT_FRAME_LENGTH;
 
   const recorder = new PvRecorder(frameLength);
@@ -96,12 +151,19 @@ async function main() {
 
   const rl = usandoWakeWord ? null : readline.createInterface({ input: process.stdin, output: process.stdout });
 
-  if (usandoWakeWord) {
+  if (usandoPorcupine) {
     console.log('✅ JLP ouvindo. Diga "Jarvis" pra começar. Ctrl+C pra encerrar.');
+  } else if (usandoOpenWakeWord) {
+    console.log('✅ JLP ouvindo (openWakeWord). Diga "Hey Jarvis" pra começar. Ctrl+C pra encerrar.');
   } else {
-    console.log('✅ JLP em modo push-to-talk (sem PICOVOICE_ACCESS_KEY configurado).');
+    console.log('✅ JLP em modo push-to-talk (nenhum wake word configurado).');
     console.log('   Aperte Enter, fale, e espere o silêncio. Ctrl+C pra encerrar.');
   }
+
+  process.once('SIGINT', () => {
+    wakeBridge?.dispose();
+    process.exit(0);
+  });
 
   const conversation = await getOrCreateConversation(CHANNEL, LOCAL_EXTERNAL_ID);
   let sessionId = conversation.sessionId ?? undefined;
@@ -111,6 +173,13 @@ async function main() {
       for (;;) {
         const frame = await recorder.read();
         if (porcupine.process(frame) !== -1) return;
+      }
+    }
+    if (wakeBridge) {
+      for (;;) {
+        const frame = await recorder.read();
+        wakeBridge.feed(frame);
+        if (wakeBridge.consumeWake()) return;
       }
     }
     await new Promise<void>((resolve) => rl!.question('\n(Enter pra falar) ', () => resolve()));

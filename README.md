@@ -125,7 +125,7 @@ cache de token (MSAL) é salvo direto no Postgres (`AppState`), que já é
 compartilhado entre local e Railway. Só precisa de `MICROSOFT_CLIENT_ID`
 configurado nos dois lugares.
 
-## Fase 3 — Camada de Voz (pipeline validado, wake word pendente)
+## Fase 3 — Camada de Voz (pipeline validado, wake word via openWakeWord)
 
 Roda **só localmente** (precisa de microfone/alto-falante) — não faz parte
 do deploy no Railway. `npm run start:voice`.
@@ -133,16 +133,31 @@ do deploy no Railway. `npm run start:voice`.
 - [x] STT (ElevenLabs Scribe) + núcleo conversacional (mesmo `askJLP` dos
       outros canais) + TTS (ElevenLabs) — testado ponta a ponta com áudio
       real, funcionando
-- [ ] Wake word "Jarvis" (Picovoice Porcupine) — conta aguardando aprovação
-      de "uso comercial" da Picovoice (mesmo pra uso pessoal, mudança
-      recente deles). Enquanto isso, o gatilho é **push-to-talk** (aperta
-      Enter, fala, o silêncio corta a gravação sozinho) — só o "gatilho"
-      muda quando a wake word estiver disponível, o resto do pipeline é
-      idêntico. Ver `src/voice/index.ts`.
+- [x] Wake word "Hey Jarvis" via **openWakeWord** (`WAKE_WORD_ENGINE=openwakeword`)
+      — a Picovoice negou de vez o trial gratuito (2026-08-27), então a
+      alternativa é um processo Python (`scripts/wake_word/detect.py`) rodando
+      o modelo pré-treinado `hey_jarvis` (grátis, sem precisar treinar nada).
+      O Node grava (`PvRecorder`, já usado antes) e alimenta o áudio pro
+      Python via stdin; quando detecta, o Python imprime `WAKE` em stdout e
+      o Node volta a assumir a gravação normalmente. Setup:
+      ```
+      python -m pip install -r scripts/wake_word/requirements.txt
+      ```
+      Se `PICOVOICE_ACCESS_KEY` estiver preenchido, esse caminho continua
+      tendo prioridade (código mantido, útil se algum dia pagar o Picovoice).
+      Sem nenhum dos dois configurados, o gatilho cai pra **push-to-talk**
+      (aperta Enter, fala, o silêncio corta a gravação sozinho) — só o
+      "gatilho" muda entre os três modos, o resto do pipeline é idêntico.
+      Ver `src/voice/index.ts`.
+- [ ] Wake word customizada "Hey JLP" — o modelo pronto do openWakeWord é só
+      "hey jarvis"; uma wake word própria exige gerar dados sintéticos (TTS)
+      e treinar um modelo novo. Fica como próximo passo opcional.
 
 Credenciais:
 ```
-PICOVOICE_ACCESS_KEY=   # console.picovoice.ai - deixe vazio pra usar push-to-talk
+PICOVOICE_ACCESS_KEY=   # console.picovoice.ai - deixe vazio pra usar openWakeWord ou push-to-talk
+WAKE_WORD_ENGINE=       # "openwakeword" pra usar a wake word gratuita "Hey Jarvis"
+PYTHON_PATH=            # caminho do executavel python, se nao for so "python" no PATH
 ELEVENLABS_API_KEY=     # elevenlabs.io -> Settings -> API Keys
 ELEVENLABS_VOICE_ID=    # elevenlabs.io -> Voices -> My Voices -> escolher uma voz -> copiar o ID
 ```
