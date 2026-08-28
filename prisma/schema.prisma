@@ -98,3 +98,28 @@ model CreditCard {
   name  String @id
   limit Float
 }
+
+// Gerente de projetos (fora do blueprint, pedido do Jose) - o JLP desenha,
+// planeja em tarefas e cobra prazo, mas nao executa nada sozinho (sem
+// Bash/Write/Edit - ver decisao registrada na memoria de longo prazo do
+// Claude sobre essa fronteira).
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      String        @default("ativo") // ativo | pausado | concluido | cancelado
+  createdAt   DateTime      @default(now())
+  tasks       ProjectTask[]
+}
+
+model ProjectTask {
+  id        String    @id @default(cuid())
+  project   Project   @relation(fields: [projectId], references: [id])
+  projectId String
+  title     String
+  status    String    @default("pendente") // pendente | em_andamento | concluida | bloqueada
+  dueAt     DateTime?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}

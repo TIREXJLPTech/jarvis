@@ -83,6 +83,14 @@ Além do blueprint original (pedido direto do José, 2026-08-27/28):
   banco/Open Finance. `limite_disponivel` e uma estimativa (soma gastos do
   mes atual pra aquele metodo de pagamento) - nao considera data de
   fechamento de fatura.
+- **projetos** (`src/skills/projetos`) - `criar_projeto`, `listar_projetos`,
+  `adicionar_tarefa_projeto`, `listar_tarefas_projeto`,
+  `atualizar_status_tarefa` e `resumo_projeto`, tabelas `Project` e
+  `ProjectTask`. O JLP funciona como gerente de projetos: ajuda a desenhar
+  escopo, quebrar em tarefas, acompanhar progresso e cobrar prazo -
+  **nunca executa nada sozinho** (sem Bash/Write/Edit, por design - ver
+  `src/core/conversation.ts`). Tarefas atrasadas tambem entram no briefing
+  matinal (`src/telegram/briefing.ts`), pra cobrança proativa.
 
 Fora das skills MCP:
 - `src/telegram/briefing.ts` monta e manda um briefing diario (clima +

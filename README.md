@@ -320,6 +320,25 @@ separada se um dia fizer sentido). `limite_disponivel` é uma estimativa -
 soma os gastos do mês atual pra aquele método de pagamento, sem considerar
 data de fechamento de fatura.
 
+## Além do blueprint — Gerente de projetos
+
+José pediu um "assessor capaz de receber atividade e executar", tipo um
+gerente de projetos: desenhar, planejar em tarefas, e cobrar execução -
+**sem executar nada tecnicamente** (nada de escrever código, criar
+repositórios ou rodar comandos). Skills `criar_projeto`,
+`listar_projetos`, `adicionar_tarefa_projeto`, `listar_tarefas_projeto`,
+`atualizar_status_tarefa`, `resumo_projeto` (`src/skills/projetos`).
+
+Essa fronteira é deliberada: o JLP roda com um conjunto de tools
+restrito (`tools: ['WebSearch', ...skillsToolNames]` em
+`src/core/conversation.ts`) - sem Bash/Write/Edit. Dar esse tipo de acesso
+seria um salto de risco real (um assistente rodando 24/7 sem supervisão,
+com escrita livre no sistema) e fica registrado como decisão em aberto,
+não implementada, pra quando/se José quiser essa conversa.
+
+Tarefas de projeto atrasadas entram automaticamente no briefing matinal
+(`src/telegram/briefing.ts`) - é a parte de "cobrar prazo" proativa.
+
 ## Deploy no Railway
 
 O JLP roda em produção como **dois serviços separados** no mesmo projeto
@@ -419,7 +438,7 @@ src/
   telegram/          # canal Telegram (bot.ts) + reminders.ts (checagem de lembretes vencidos)
   web/                # canal web (Express + pagina estatica)
   voice/              # camada de voz local (Fase 3) - STT/TTS ElevenLabs, wake word Porcupine
-  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, dev, memoria, custos, financas, ...)
+  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, dev, memoria, custos, financas, projetos, ...)
 scripts/
   test-anthropic.ts
   google-auth-setup.ts
