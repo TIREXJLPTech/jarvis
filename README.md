@@ -307,6 +307,19 @@ Esta é uma fase contínua (evolui junto com o uso real, sem "fim" definido).
 - [ ] Logs de auditoria formais
 - [ ] PWA (se necessário)
 
+## Além do blueprint — Controle de gastos pessoais
+
+Pedido direto do José (fora das 9 fases originais). Skills
+`registrar_gasto`, `listar_gastos`, `resumo_gastos` (por categoria),
+`definir_limite_cartao` e `limite_disponivel` (`src/skills/financas`).
+
+**É um registro manual** - José informa cada gasto por texto (valor,
+descrição, categoria, forma de pagamento); não há importação automática de
+banco/Open Finance (isso seria um projeto bem maior e regulado, decisão
+separada se um dia fizer sentido). `limite_disponivel` é uma estimativa -
+soma os gastos do mês atual pra aquele método de pagamento, sem considerar
+data de fechamento de fatura.
+
 ## Deploy no Railway
 
 O JLP roda em produção como **dois serviços separados** no mesmo projeto
@@ -406,7 +419,7 @@ src/
   telegram/          # canal Telegram (bot.ts) + reminders.ts (checagem de lembretes vencidos)
   web/                # canal web (Express + pagina estatica)
   voice/              # camada de voz local (Fase 3) - STT/TTS ElevenLabs, wake word Porcupine
-  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, dev, memoria, custos, ...)
+  skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, dev, memoria, custos, financas, ...)
 scripts/
   test-anthropic.ts
   google-auth-setup.ts

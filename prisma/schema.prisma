@@ -79,3 +79,22 @@ model Memory {
   content   String
   createdAt DateTime @default(now())
 }
+
+// Controle de gastos - registro manual (Jose informa cada compra por
+// texto), nao e importacao automatica de banco/Open Finance.
+model Expense {
+  id            String   @id @default(cuid())
+  description   String
+  amount        Float
+  category      String?
+  paymentMethod String?
+  purchasedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+}
+
+// Limite de cartao de credito, pra estimar quanto ainda resta gastar no
+// mes (aproximado - nao considera data de fechamento de fatura).
+model CreditCard {
+  name  String @id
+  limit Float
+}

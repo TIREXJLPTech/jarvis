@@ -75,6 +75,15 @@ Fase 8:
   logado em `Message` desde a Fase 1) dos ultimos N dias, com total e
   media diaria.
 
+Além do blueprint original (pedido direto do José, 2026-08-27/28):
+- **financas** (`src/skills/financas`) - `registrar_gasto`, `listar_gastos`,
+  `resumo_gastos` (por categoria), `definir_limite_cartao` e
+  `limite_disponivel`, tabelas `Expense` e `CreditCard`. **Registro manual**
+  - Jose informa cada gasto por texto, nao e importado automaticamente de
+  banco/Open Finance. `limite_disponivel` e uma estimativa (soma gastos do
+  mes atual pra aquele metodo de pagamento) - nao considera data de
+  fechamento de fatura.
+
 Fora das skills MCP:
 - `src/telegram/briefing.ts` monta e manda um briefing diario (clima +
   lembretes) as 7h, reaproveitando os handlers de `clima` e

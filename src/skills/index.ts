@@ -9,6 +9,7 @@ import { listarDispositivosSkill, controlarDispositivoSkill } from './casa';
 import { listarRepositoriosSkill, listarPrsSkill, listarIssuesSkill, listarCommitsSkill, listarDeploysSkill } from './dev';
 import { lembrarSkill, buscarMemoriasSkill } from './memoria';
 import { resumoCustosSkill } from './custos';
+import { registrarGastoSkill, listarGastosSkill, resumoGastosSkill, definirLimiteCartaoSkill, limiteDisponivelSkill } from './financas';
 
 const SERVER_NAME = 'jlp-skills';
 
@@ -33,6 +34,11 @@ const skills = [
   lembrarSkill,
   buscarMemoriasSkill,
   resumoCustosSkill,
+  registrarGastoSkill,
+  listarGastosSkill,
+  resumoGastosSkill,
+  definirLimiteCartaoSkill,
+  limiteDisponivelSkill,
 ];
 
 /**
