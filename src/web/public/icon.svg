@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" rx="40" fill="#050a14" />
+  <circle cx="100" cy="100" r="80" fill="none" stroke="#0a3d91" stroke-width="3" opacity="0.6" />
+  <circle cx="100" cy="100" r="66" fill="none" stroke="#087fff" stroke-width="4" opacity="0.85" />
+  <circle cx="100" cy="100" r="50" fill="#00c8ff" opacity="0.12" />
+  <circle cx="100" cy="100" r="54" fill="none" stroke="#00c8ff" stroke-width="3" />
+  <text x="100" y="112" font-family="system-ui, -apple-system, sans-serif" font-size="34" font-weight="700" letter-spacing="2" fill="#00c8ff" text-anchor="middle">JLP</text>
+</svg>

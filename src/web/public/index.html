@@ -2,54 +2,1212 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>JLP</title>
+
+<!-- PWA: permite "Adicionar a tela de inicio" no celular (Android e iOS),
+     abrindo em tela cheia como um app, sem barra do navegador. -->
+<link rel="manifest" href="/manifest.json" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/icon.svg" />
+<meta name="theme-color" content="#0a0c10" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="JLP" />
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
+  html, body { overflow-x: hidden; }
   body {
     margin: 0;
     font-family: system-ui, -apple-system, sans-serif;
-    background: #0f1115;
+    background: #0a0c10;
     color: #e6e6e6;
     height: 100vh;
+    height: 100dvh; /* viewport real no mobile - some o teclado nao cobre o input */
     display: flex;
     flex-direction: column;
+    -webkit-text-size-adjust: 100%;
   }
   header {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #262a33;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid #1a1d24;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  header h1 { font-size: 1rem; margin: 0; font-weight: 600; }
+  header h1 {
+    font-size: 0.85rem;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: #6b7280;
+  }
   header button {
     background: none;
-    border: 1px solid #3a3f4b;
+    border: 1px solid #2a2f3a;
     color: #9aa0ab;
     border-radius: 6px;
     padding: 0.3rem 0.6rem;
     cursor: pointer;
     font-size: 0.8rem;
   }
+
+
+  /* ============================================================
+     JLP CINEMATIC CORE v2
+     Menos "radar neon", mais núcleo de IA cinematográfico:
+     arcos independentes, espaços negativos, profundidade e glow controlado.
+     ============================================================ */
+  #hud-wrap {
+    --jlp-cyan: #22d3ff;
+    --jlp-blue: #1677ff;
+    --jlp-deep-blue: #0b3d91;
+    --jlp-ink: #040912;
+    --jlp-amber: #f5a623;
+    --jlp-red: #ef4444;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 1.65rem 2.5rem 1rem;
+    flex-shrink: 0;
+    position: relative;
+    isolation: isolate;
+    background:
+      radial-gradient(
+        ellipse at 50% 44%,
+        rgba(0, 151, 255, 0.07) 0%,
+        rgba(0, 87, 170, 0.025) 34%,
+        transparent 63%
+      );
+  }
+
+  #hud-wrap::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: min(68vw, 470px);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+    background:
+      radial-gradient(
+        circle,
+        rgba(0, 185, 255, 0.055) 0%,
+        rgba(0, 112, 255, 0.02) 34%,
+        transparent 69%
+      );
+    filter: blur(18px);
+  }
+
+  @media (max-width: 420px) {
+    #hud-wrap { padding: 1.1rem 1rem 0.75rem; }
+  }
+
+  #hud-circle {
+    position: relative;
+    width: clamp(230px, 64vw, 350px);
+    height: clamp(230px, 64vw, 350px);
+    flex: 0 0 auto;
+  }
+
+  #hud {
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+    filter:
+      drop-shadow(0 0 4px rgba(34, 211, 255, 0.22))
+      drop-shadow(0 0 14px rgba(22, 119, 255, 0.11));
+    transition: filter 0.45s ease, transform 0.18s ease;
+  }
+
+  #hud .jlp-atmosphere {
+    fill: url(#jlp-atmosphere-gradient);
+    opacity: 0.48;
+  }
+
+  #hud .jlp-axis {
+    stroke: #174d86;
+    stroke-width: 0.8;
+    opacity: 0.26;
+    vector-effect: non-scaling-stroke;
+  }
+
+  #hud .jlp-axis-accent {
+    stroke: var(--jlp-cyan);
+    stroke-width: 1.15;
+    opacity: 0.42;
+    vector-effect: non-scaling-stroke;
+  }
+
+  #hud .jlp-axis-node {
+    fill: var(--jlp-cyan);
+    opacity: 0.68;
+    filter: drop-shadow(0 0 3px rgba(34, 211, 255, 0.55));
+  }
+
+  #hud .jlp-ring-layer {
+    transform-origin: 120px 120px;
+    transform-box: view-box;
+    will-change: transform;
+  }
+
+  #hud .jlp-ring-segment {
+    fill: none;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    transition: stroke 0.45s ease, opacity 0.45s ease;
+  }
+
+  #hud .jlp-ring-blue { stroke: #15569e; }
+  #hud .jlp-ring-deep { stroke: #0c315f; }
+
+  #hud .jlp-ring-accent {
+    stroke: var(--jlp-cyan);
+    filter: drop-shadow(0 0 2.5px rgba(34, 211, 255, 0.5));
+  }
+
+  #hud .jlp-tick {
+    stroke: #1d67ad;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    transition: stroke 0.45s ease, opacity 0.45s ease;
+  }
+
+  #hud .jlp-tick-accent {
+    stroke: var(--jlp-cyan);
+    filter: drop-shadow(0 0 2px rgba(34, 211, 255, 0.42));
+  }
+
+  #hud .jlp-particle {
+    fill: #49dcff;
+    opacity: 0.14;
+    animation: particle-twinkle ease-in-out infinite;
+  }
+
+  @keyframes particle-twinkle {
+    0%, 100% { opacity: 0.04; }
+    50% { opacity: 0.3; }
+  }
+
+  #hud .jlp-dot {
+    fill: var(--jlp-cyan);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    filter: drop-shadow(0 0 4px rgba(34, 211, 255, 0.72));
+  }
+
+  #hud-circle[data-state="thinking"] .jlp-dot { opacity: 0.9; }
+
+  #jlp-core-halo {
+    fill: url(#jlp-core-gradient);
+    opacity: 0.42;
+    transition: opacity 0.18s ease, r 0.18s ease;
+  }
+
+  #jlp-core-disc {
+    fill: #040a12;
+    stroke: #0d4f8c;
+    stroke-width: 0.9;
+    opacity: 0.98;
+    transition: fill 0.4s ease, stroke 0.4s ease, r 0.18s ease;
+  }
+
+  .jlp-core-ring {
+    fill: none;
+    stroke: var(--jlp-cyan);
+    stroke-width: 1.75;
+    opacity: 0.88;
+    filter: drop-shadow(0 0 3px rgba(34, 211, 255, 0.45));
+    transition: stroke 0.45s ease, opacity 0.45s ease;
+  }
+
+  .jlp-core-ring-secondary {
+    fill: none;
+    stroke: #155ea9;
+    stroke-width: 0.85;
+    stroke-dasharray: 18 8 4 12;
+    opacity: 0.62;
+    transform-origin: 120px 120px;
+    animation: spin-rev 24s linear infinite;
+  }
+
+  .jlp-core-tech {
+    fill: none;
+    stroke: #1871c7;
+    stroke-width: 1;
+    stroke-linecap: round;
+    opacity: 0.62;
+  }
+
+  #hud-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+    font-size: clamp(1.8rem, 7vw, 2.45rem);
+    font-weight: 650;
+    letter-spacing: 0.24em;
+    text-indent: 0.24em;
+    color: #41dfff;
+    text-shadow:
+      0 0 7px rgba(34, 211, 255, 0.55),
+      0 0 22px rgba(22, 119, 255, 0.2);
+    animation: label-idle 4.8s ease-in-out infinite;
+    pointer-events: none;
+    user-select: none;
+    transition: color 0.35s ease, transform 0.14s ease, text-shadow 0.14s ease;
+  }
+
+  #hud-status {
+    font-weight: 400;
+    font-size: 0.69rem;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: #29ceff;
+    opacity: 0.72;
+    transition: color 0.35s ease, opacity 0.35s ease;
+    min-height: 1em;
+  }
+
+  #jlp-waveform {
+    width: 48%;
+    max-width: 165px;
+    height: 18px;
+    margin-top: -0.1rem;
+    opacity: 0.56;
+  }
+
+  .jlp-wave-bar {
+    fill: #22d3ff;
+    opacity: 0.5;
+    transition: fill 0.4s ease, opacity 0.4s ease;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes spin-rev { to { transform: rotate(-360deg); } }
+
+  @keyframes rings-breathe {
+    0%, 100% { opacity: 0.82; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes label-idle {
+    0%, 100% {
+      opacity: 0.88;
+      text-shadow:
+        0 0 6px rgba(34, 211, 255, 0.42),
+        0 0 18px rgba(22, 119, 255, 0.14);
+    }
+    50% {
+      opacity: 1;
+      text-shadow:
+        0 0 9px rgba(34, 211, 255, 0.66),
+        0 0 28px rgba(22, 119, 255, 0.24);
+    }
+  }
+
+  @keyframes label-thinking {
+    0%, 100% { text-shadow: 0 0 8px rgba(22, 119, 255, 0.48); }
+    50% {
+      text-shadow:
+        0 0 14px rgba(34, 211, 255, 0.78),
+        0 0 30px rgba(22, 119, 255, 0.36);
+    }
+  }
+
+  @keyframes label-glitch {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-1px, 1px); }
+    40% { transform: translate(1px, -1px); }
+    60% { transform: translate(-1px, -1px); }
+    80% { transform: translate(1px, 1px); }
+  }
+
+  #hud-circle[data-state="idle"] #jlp-rings {
+    animation: rings-breathe 5.6s ease-in-out infinite;
+  }
+
+  #hud-circle[data-state="listening"] #hud-label,
+  #hud-circle[data-state="speaking"] #hud-label {
+    color: #54e4ff;
+    animation: none;
+  }
+
+  #hud-circle[data-state="thinking"] #hud-label {
+    color: #2bbfff;
+    animation: label-thinking 0.85s ease-in-out infinite;
+  }
+
+  #hud-circle[data-state="thinking"] ~ #hud-status {
+    color: #238dff;
+    opacity: 0.95;
+  }
+
+  #hud-circle[data-state="thinking"] ~ #jlp-waveform .jlp-wave-bar {
+    fill: var(--jlp-blue);
+  }
+
+  #hud-circle[data-state="thinking"] #hud {
+    filter:
+      drop-shadow(0 0 5px rgba(34, 211, 255, 0.34))
+      drop-shadow(0 0 18px rgba(22, 119, 255, 0.22));
+  }
+
+  #hud-circle[data-state="alert"] .jlp-ring-accent,
+  #hud-circle[data-state="alert"] .jlp-tick-accent,
+  #hud-circle[data-state="alert"] .jlp-core-ring {
+    stroke: var(--jlp-amber);
+  }
+
+  #hud-circle[data-state="alert"] #jlp-core-disc {
+    stroke: var(--jlp-amber);
+  }
+
+  #hud-circle[data-state="alert"] #hud-label,
+  #hud-circle[data-state="alert"] ~ #hud-status {
+    color: var(--jlp-amber);
+  }
+
+  #hud-circle[data-state="alert"] ~ #jlp-waveform .jlp-wave-bar {
+    fill: var(--jlp-amber);
+  }
+
+  #hud-circle[data-state="error"] .jlp-ring-accent,
+  #hud-circle[data-state="error"] .jlp-tick-accent,
+  #hud-circle[data-state="error"] .jlp-core-ring {
+    stroke: var(--jlp-red);
+  }
+
+  #hud-circle[data-state="error"] #jlp-core-disc {
+    stroke: var(--jlp-red);
+  }
+
+  #hud-circle[data-state="error"] #hud-label {
+    color: var(--jlp-red);
+    animation: label-glitch 0.25s steps(2) infinite;
+  }
+
+  #hud-circle[data-state="error"] ~ #hud-status {
+    color: var(--jlp-red);
+  }
+
+  #hud-circle[data-state="error"] ~ #jlp-waveform .jlp-wave-bar {
+    fill: var(--jlp-red);
+  }
+
+  /* ============================================================
+     JLP FUTURISTIC PATCH v3
+     ============================================================ */
+
+  #hud-circle {
+    width: clamp(260px, 67vw, 390px);
+    height: clamp(260px, 67vw, 390px);
+  }
+
+  #hud .v3-ring {
+    fill: none;
+    transform-origin: 120px 120px;
+    transform-box: view-box;
+    vector-effect: non-scaling-stroke;
+  }
+
+  #hud .v3-deep {
+    stroke: #093461;
+    opacity: .48;
+  }
+
+  #hud .v3-blue {
+    stroke: #1265ad;
+    opacity: .64;
+  }
+
+  #hud .v3-cyan {
+    stroke: #2bdcff;
+    opacity: .92;
+    filter: drop-shadow(0 0 3px rgba(43,220,255,.62));
+  }
+
+  #hud .v3-thin {
+    stroke-width: .55;
+  }
+
+  #hud .v3-medium {
+    stroke-width: 1.05;
+  }
+
+  #hud .v3-heavy {
+    stroke-width: 2.7;
+    stroke-linecap: round;
+  }
+
+  #hud .v3-a {
+    animation: spin 58s linear infinite;
+  }
+
+  #hud .v3-b {
+    animation: spin-rev 37s linear infinite;
+  }
+
+  #hud .v3-c {
+    animation: spin 23s linear infinite;
+  }
+
+  #hud .v3-d {
+    animation: spin-rev 14s linear infinite;
+  }
+
+  #hud .v3-scan {
+    stroke: #32dcff;
+    stroke-width: 1;
+    stroke-dasharray: 2 14 1 27;
+    opacity: .66;
+    animation: spin 7s linear infinite;
+    filter: drop-shadow(0 0 3px rgba(50,220,255,.55));
+  }
+
+  #hud .v3-ray {
+    stroke: #10558e;
+    stroke-width: .55;
+    opacity: .26;
+  }
+
+  #hud .v3-node {
+    fill: #36ddff;
+    opacity: .82;
+    filter: drop-shadow(0 0 4px rgba(54,221,255,.72));
+  }
+
+  #hud .v3-node-dim {
+    fill: #1773b8;
+    opacity: .48;
+  }
+
+  #hud .v3-bracket {
+    fill: none;
+    stroke: #1a72bb;
+    stroke-width: .8;
+    opacity: .6;
+    stroke-linecap: round;
+  }
+
+  #hud .v3-bracket-hot {
+    stroke: #36dcff;
+    opacity: .9;
+    filter: drop-shadow(0 0 2px rgba(54,220,255,.6));
+  }
+
+  #hud .v3-iris {
+    fill: none;
+    transform-origin: 120px 120px;
+    transform-box: view-box;
+    stroke-linecap: round;
+  }
+
+  #hud .v3-iris-a {
+    stroke: #2bdaff;
+    stroke-width: 2.3;
+    stroke-dasharray: 24 18 7 15;
+    opacity: .82;
+    animation: spin 9s linear infinite;
+    filter: drop-shadow(0 0 3px rgba(43,218,255,.55));
+  }
+
+  #hud .v3-iris-b {
+    stroke: #1268ac;
+    stroke-width: 1;
+    stroke-dasharray: 9 6 2 11;
+    opacity: .62;
+    animation: spin-rev 17s linear infinite;
+  }
+
+  #hud-label {
+    font-weight: 700;
+    color: #55e6ff;
+    text-shadow:
+      0 0 5px rgba(85,230,255,.75),
+      0 0 16px rgba(28,157,255,.34),
+      0 0 32px rgba(9,85,180,.18);
+  }
+
+  #hud-circle[data-state="thinking"] .v3-c {
+    animation-duration: 4s;
+  }
+
+  #hud-circle[data-state="thinking"] .v3-d {
+    animation-duration: 2.4s;
+  }
+
+  #hud-circle[data-state="thinking"] .v3-scan {
+    animation-duration: 1.8s;
+  }
+
+  #hud-circle[data-state="listening"] .v3-iris-a,
+  #hud-circle[data-state="speaking"] .v3-iris-a {
+    animation-duration: 3.5s;
+  }
+
+
+  /* ============================================================
+     JLP LABEL PATCH v3.1
+     - Remove/corrige pontos periféricos indesejados
+     - Deixa o texto JLP no estilo de linhas animadas
+     ============================================================ */
+
+  /* Remove os pontos que ficaram visivelmente estranhos */
+  #hud g#jlp-v3-back circle[cx="120"][cy="15"],
+  #hud g#jlp-v3-back circle[cx="120"][cy="225"],
+  #hud g#jlp-v3-back circle[cx="15"][cy="120"] {
+    display: none;
+  }
+
+  /* Suaviza alguns brackets e scans para o núcleo respirar melhor */
+  #hud g#jlp-v3-back .v3-bracket {
+    opacity: .42;
+  }
+
+  #hud g#jlp-v3-back .v3-bracket-hot {
+    opacity: .72;
+  }
+
+  #hud g#jlp-v3-back .v3-scan {
+    opacity: .52;
+  }
+
+  /* ------------------------------------------------------------
+     JLP como linhas tecnológicas animadas
+     ------------------------------------------------------------ */
+  #hud-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    isolation: isolate;
+    font-weight: 700;
+    letter-spacing: .23em;
+    text-indent: .23em;
+
+    color: transparent !important;
+    -webkit-text-fill-color: transparent;
+
+    background-image:
+      linear-gradient(
+        90deg,
+        #a9f9ff 0%,
+        #54e8ff 18%,
+        #1a86ff 36%,
+        #c7ffff 50%,
+        #1a86ff 64%,
+        #54e8ff 82%,
+        #a9f9ff 100%
+      ),
+      repeating-linear-gradient(
+        180deg,
+        rgba(255,255,255,.96) 0 1px,
+        rgba(155,244,255,.92) 1px 2px,
+        rgba(31,147,255,.72) 2px 3px,
+        rgba(0,0,0,0) 3px 6px
+      );
+
+    background-size: 220% 100%, 100% 6px;
+    background-position: 0% 50%, 0 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    text-shadow: none !important;
+    filter:
+      drop-shadow(0 0 5px rgba(76,225,255,.35))
+      drop-shadow(0 0 18px rgba(17,112,255,.25));
+
+    animation:
+      jlp-text-flow 5s linear infinite,
+      label-idle 4.8s ease-in-out infinite;
+  }
+
+  #hud-label::after {
+    content: "JLP";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: inherit;
+    text-indent: inherit;
+    color: transparent;
+    -webkit-text-stroke: 0.7px rgba(109,232,255,.35);
+    opacity: .85;
+    pointer-events: none;
+    text-shadow:
+      0 0 10px rgba(54,220,255,.16),
+      0 0 20px rgba(18,126,255,.10);
+  }
+
+  @keyframes jlp-text-flow {
+    from {
+      background-position: 0% 50%, 0 0;
+    }
+    to {
+      background-position: 220% 50%, 0 0;
+    }
+  }
+
+  /* Mantém o efeito do JLP em todos os estados */
+  #hud-circle[data-state="idle"] #hud-label,
+  #hud-circle[data-state="listening"] #hud-label,
+  #hud-circle[data-state="speaking"] #hud-label,
+  #hud-circle[data-state="thinking"] #hud-label,
+  #hud-circle[data-state="alert"] #hud-label,
+  #hud-circle[data-state="error"] #hud-label {
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+
+  #hud-circle[data-state="listening"] #hud-label,
+  #hud-circle[data-state="speaking"] #hud-label {
+    animation:
+      jlp-text-flow 3.2s linear infinite,
+      label-idle 3.8s ease-in-out infinite;
+    filter:
+      drop-shadow(0 0 7px rgba(96,238,255,.42))
+      drop-shadow(0 0 24px rgba(24,138,255,.28));
+  }
+
+  #hud-circle[data-state="thinking"] #hud-label {
+    animation:
+      jlp-text-flow 2.1s linear infinite,
+      label-thinking .85s ease-in-out infinite;
+    filter:
+      drop-shadow(0 0 8px rgba(104,240,255,.48))
+      drop-shadow(0 0 26px rgba(20,132,255,.30));
+  }
+
+  #hud-circle[data-state="alert"] #hud-label {
+    background-image:
+      linear-gradient(
+        90deg,
+        #fff0b0 0%,
+        #ffd565 18%,
+        #ffb020 40%,
+        #fff1be 50%,
+        #ffb020 60%,
+        #ffd565 82%,
+        #fff0b0 100%
+      ),
+      repeating-linear-gradient(
+        180deg,
+        rgba(255,255,255,.95) 0 1px,
+        rgba(255,222,148,.90) 1px 2px,
+        rgba(255,181,63,.70) 2px 3px,
+        rgba(0,0,0,0) 3px 6px
+      );
+    animation:
+      jlp-text-flow 2.4s linear infinite,
+      label-idle 2.8s ease-in-out infinite;
+  }
+
+  #hud-circle[data-state="error"] #hud-label {
+    background-image:
+      linear-gradient(
+        90deg,
+        #ffd0d0 0%,
+        #ff7f7f 18%,
+        #ff3d3d 40%,
+        #ffdada 50%,
+        #ff3d3d 60%,
+        #ff7f7f 82%,
+        #ffd0d0 100%
+      ),
+      repeating-linear-gradient(
+        180deg,
+        rgba(255,255,255,.90) 0 1px,
+        rgba(255,162,162,.86) 1px 2px,
+        rgba(255,67,67,.74) 2px 3px,
+        rgba(0,0,0,0) 3px 6px
+      );
+    animation:
+      jlp-text-flow 1.2s linear infinite,
+      label-glitch .25s steps(2) infinite;
+  }
+
+
+  /* ============================================================
+     JLP FUTURISTIC PATCH v3.2
+     ============================================================ */
+
+
+  /* ------------------------------------------------------------
+     REMOVE OS QUATRO PINOS LONGOS DO HUD ORIGINAL
+     ------------------------------------------------------------ */
+
+  #hud #jlp-axis {
+    display: none !important;
+  }
+
+
+  /* Remove tambem os nos cardeais extras da V3 */
+
+  #hud #jlp-v3-back circle[cx="120"][cy="15"],
+  #hud #jlp-v3-back circle[cx="120"][cy="225"],
+  #hud #jlp-v3-back circle[cx="15"][cy="120"],
+  #hud #jlp-v3-back circle[cx="225"][cy="120"] {
+    display: none !important;
+  }
+
+
+  /* ------------------------------------------------------------
+     SUAVIZA ELEMENTOS EXTERNOS
+     ------------------------------------------------------------ */
+
+  #hud .v3-bracket {
+    opacity: .32 !important;
+  }
+
+  #hud .v3-bracket-hot {
+    opacity: .55 !important;
+  }
+
+  #hud .v3-ray {
+    opacity: .16 !important;
+  }
+
+
+  /* ============================================================
+     NOVO WORDMARK JLP
+     ============================================================ */
+
+  #hud-label {
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    pointer-events: none;
+
+    user-select: none;
+
+    background: none !important;
+
+    color: transparent !important;
+
+    -webkit-text-fill-color: transparent !important;
+
+    text-shadow: none !important;
+
+    filter: none;
+
+    animation: none !important;
+
+    transition:
+      transform .16s ease,
+      filter .25s ease;
+  }
+
+
+  /* Desliga o pseudo JLP criado na V3.1 */
+
+  #hud-label::after {
+    content: none !important;
+    display: none !important;
+  }
+
+
+  #jlp-wordmark {
+    width: 78px;
+    height: 42px;
+
+    overflow: visible;
+
+    filter:
+      drop-shadow(
+        0 0 4px
+        rgba(47,220,255,.28)
+      )
+      drop-shadow(
+        0 0 15px
+        rgba(18,116,255,.16)
+      );
+  }
+
+
+  /* ------------------------------------------------------------
+     BASE DAS LETRAS
+     ------------------------------------------------------------ */
+
+  .jlp-word {
+    font-family:
+      "Segoe UI",
+      Arial,
+      sans-serif;
+
+    font-size: 31px;
+
+    font-weight: 700;
+
+    letter-spacing: 5px;
+
+    fill: transparent;
+
+    paint-order: stroke;
+
+    stroke-linejoin: round;
+
+    stroke-linecap: round;
+  }
+
+
+  /* Contorno estrutural escuro */
+
+  .jlp-word-base {
+    stroke: #0b5592;
+
+    stroke-width: 1.45;
+
+    opacity: .72;
+  }
+
+
+  /* ------------------------------------------------------------
+     LINHA DE ENERGIA PRINCIPAL
+     ------------------------------------------------------------ */
+
+  .jlp-word-flow {
+    stroke: #63eaff;
+
+    stroke-width: 1.65;
+
+    stroke-dasharray:
+      18 18 5 28;
+
+    stroke-dashoffset: 0;
+
+    opacity: .92;
+
+    filter:
+      drop-shadow(
+        0 0 3px
+        rgba(77,230,255,.72)
+      );
+
+    animation:
+      jlp-word-flow
+      4.5s
+      linear
+      infinite;
+  }
+
+
+  /* ------------------------------------------------------------
+     MICRO IMPULSOS DE ENERGIA
+     ------------------------------------------------------------ */
+
+  .jlp-word-scan {
+    stroke: #d2fbff;
+
+    stroke-width: .85;
+
+    stroke-dasharray:
+      2 20 1 27;
+
+    opacity: .72;
+
+    filter:
+      drop-shadow(
+        0 0 2px
+        rgba(190,249,255,.78)
+      );
+
+    animation:
+      jlp-word-scan
+      2.8s
+      linear
+      infinite;
+  }
+
+
+  @keyframes jlp-word-flow {
+
+    from {
+      stroke-dashoffset: 0;
+    }
+
+    to {
+      stroke-dashoffset: -138;
+    }
+
+  }
+
+
+  @keyframes jlp-word-scan {
+
+    from {
+      stroke-dashoffset: 0;
+    }
+
+    to {
+      stroke-dashoffset: 102;
+    }
+
+  }
+
+
+  /* ============================================================
+     IDLE
+     ============================================================ */
+
+  #hud-circle[data-state="idle"]
+  #jlp-wordmark {
+
+    animation:
+      jlp-word-breathe
+      4s
+      ease-in-out
+      infinite;
+  }
+
+
+  @keyframes jlp-word-breathe {
+
+    0%,
+    100% {
+      opacity: .86;
+
+      filter:
+        drop-shadow(
+          0 0 4px
+          rgba(47,220,255,.24)
+        )
+        drop-shadow(
+          0 0 14px
+          rgba(18,116,255,.12)
+        );
+    }
+
+    50% {
+      opacity: 1;
+
+      filter:
+        drop-shadow(
+          0 0 7px
+          rgba(47,220,255,.42)
+        )
+        drop-shadow(
+          0 0 20px
+          rgba(18,116,255,.22)
+        );
+    }
+
+  }
+
+
+  /* ============================================================
+     OUVINDO
+     ============================================================ */
+
+  #hud-circle[data-state="listening"]
+  .jlp-word-flow {
+
+    animation-duration: 2.1s;
+
+    stroke: #86f2ff;
+  }
+
+
+  #hud-circle[data-state="listening"]
+  .jlp-word-scan {
+
+    animation-duration: 1.3s;
+  }
+
+
+  /* ============================================================
+     FALANDO
+     ============================================================ */
+
+  #hud-circle[data-state="speaking"]
+  .jlp-word-flow {
+
+    animation-duration: 1.9s;
+
+    stroke: #8cf4ff;
+  }
+
+
+  #hud-circle[data-state="speaking"]
+  .jlp-word-scan {
+
+    animation-duration: 1.05s;
+  }
+
+
+  /* ============================================================
+     PROCESSANDO
+     ============================================================ */
+
+  #hud-circle[data-state="thinking"]
+  .jlp-word-flow {
+
+    stroke: #31bcff;
+
+    stroke-width: 1.8;
+
+    animation-duration: .9s;
+  }
+
+
+  #hud-circle[data-state="thinking"]
+  .jlp-word-scan {
+
+    stroke: #c9faff;
+
+    animation-duration: .55s;
+  }
+
+
+  #hud-circle[data-state="thinking"]
+  #jlp-wordmark {
+
+    filter:
+      drop-shadow(
+        0 0 7px
+        rgba(43,205,255,.45)
+      )
+      drop-shadow(
+        0 0 20px
+        rgba(22,116,255,.22)
+      );
+  }
+
+
+  /* ============================================================
+     ALERTA
+     ============================================================ */
+
+  #hud-circle[data-state="alert"]
+  .jlp-word-base {
+
+    stroke: #895315;
+  }
+
+
+  #hud-circle[data-state="alert"]
+  .jlp-word-flow {
+
+    stroke: #ffc45b;
+
+    animation-duration: 1.5s;
+  }
+
+
+  #hud-circle[data-state="alert"]
+  .jlp-word-scan {
+
+    stroke: #fff0be;
+
+    animation-duration: .9s;
+  }
+
+
+  /* ============================================================
+     ERRO
+     ============================================================ */
+
+  #hud-circle[data-state="error"]
+  .jlp-word-base {
+
+    stroke: #8d2525;
+  }
+
+
+  #hud-circle[data-state="error"]
+  .jlp-word-flow {
+
+    stroke: #ff5656;
+
+    animation-duration: .55s;
+  }
+
+
+  #hud-circle[data-state="error"]
+  .jlp-word-scan {
+
+    stroke: #ffd0d0;
+
+    animation-duration: .32s;
+  }
+
+
+  #hud-circle[data-state="error"]
+  #jlp-wordmark {
+
+    animation:
+      label-glitch
+      .22s
+      steps(2)
+      infinite;
+  }
+
+
+  /* ============================================================
+     DEIXA O CENTRO MAIS ESCURO
+     ============================================================ */
+
+  #jlp-core-disc {
+
+    fill: #020910 !important;
+
+    stroke: #126cae !important;
+
+    stroke-width: .85 !important;
+  }
+
+
+  #jlp-core-halo {
+
+    opacity: .23 !important;
+  }
+
+
+  .jlp-core-ring {
+
+    stroke-width: 1.25 !important;
+
+    opacity: .78 !important;
+  }
+
   #log {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 0.5rem 1rem 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
   .msg { max-width: 75%; padding: 0.5rem 0.75rem; border-radius: 10px; white-space: pre-wrap; line-height: 1.4; }
   .msg.user { align-self: flex-end; background: #2563eb; color: white; }
-  .msg.assistant { align-self: flex-start; background: #1c1f26; border: 1px solid #262a33; }
-  .msg.system { align-self: center; color: #9aa0ab; font-size: 0.85rem; }
-  form { display: flex; gap: 0.5rem; padding: 0.75rem; border-top: 1px solid #262a33; }
+  .msg.assistant { align-self: flex-start; background: #14171d; border: 1px solid #1e222b; }
+  .msg.system { align-self: center; color: #6b7280; font-size: 0.85rem; }
+  form { display: flex; gap: 0.5rem; padding: 0.75rem; border-top: 1px solid #1a1d24; }
   input[type="text"], input[type="password"] {
     flex: 1;
-    background: #1c1f26;
-    border: 1px solid #3a3f4b;
+    background: #14171d;
+    border: 1px solid #2a2f3a;
     color: #e6e6e6;
     border-radius: 8px;
     padding: 0.6rem 0.8rem;
@@ -65,10 +1223,26 @@
     font-size: 1rem;
   }
   button:disabled { opacity: 0.5; cursor: default; }
+  #mic-btn {
+    background: #14171d;
+    border: 1px solid #2a2f3a;
+    color: #e6e6e6;
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  #mic-btn.recording {
+    background: #7f1d1d;
+    border-color: #ef4444;
+    animation: mic-pulse 1s ease-in-out infinite;
+  }
+  @keyframes mic-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); } 50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); } }
   #gate {
     position: fixed;
     inset: 0;
-    background: rgba(15, 17, 21, 0.92);
+    background: rgba(10, 12, 16, 0.92);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -76,8 +1250,8 @@
   }
   #gate.hidden { display: none; }
   .gate-box {
-    background: #1c1f26;
-    border: 1px solid #262a33;
+    background: #14171d;
+    border: 1px solid #1e222b;
     border-radius: 12px;
     padding: 1.5rem;
     width: 100%;
@@ -91,11 +1265,202 @@
 </head>
 <body>
 <header>
-  <h1>JLP</h1>
+  <h1>J &middot; L &middot; P</h1>
   <button id="reset">Reiniciar conversa</button>
 </header>
+
+<div id="hud-wrap">
+  <div id="hud-circle" data-state="idle">
+    <svg id="hud" viewBox="0 0 240 240" aria-hidden="true">
+      <defs>
+        <radialGradient id="jlp-atmosphere-gradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#13cfff" stop-opacity="0.11" />
+          <stop offset="46%" stop-color="#087fff" stop-opacity="0.04" />
+          <stop offset="100%" stop-color="#087fff" stop-opacity="0" />
+        </radialGradient>
+
+        <radialGradient id="jlp-core-gradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#23d7ff" stop-opacity="0.18" />
+          <stop offset="54%" stop-color="#087fff" stop-opacity="0.08" />
+          <stop offset="100%" stop-color="#087fff" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <circle class="jlp-atmosphere" cx="120" cy="120" r="116" />
+
+      <g id="jlp-axis">
+        <line class="jlp-axis" x1="13" y1="120" x2="55" y2="120" />
+        <line class="jlp-axis-accent" x1="-7" y1="120" x2="13" y2="120" />
+        <circle class="jlp-axis-node" cx="-10" cy="120" r="2.2" />
+
+        <line class="jlp-axis" x1="185" y1="120" x2="227" y2="120" />
+        <line class="jlp-axis-accent" x1="227" y1="120" x2="247" y2="120" />
+        <circle class="jlp-axis-node" cx="250" cy="120" r="2.2" />
+
+        <line class="jlp-axis" x1="120" y1="13" x2="120" y2="55" />
+        <line class="jlp-axis-accent" x1="120" y1="-7" x2="120" y2="13" />
+        <circle class="jlp-axis-node" cx="120" cy="-10" r="2.2" />
+
+        <line class="jlp-axis" x1="120" y1="185" x2="120" y2="227" />
+        <line class="jlp-axis-accent" x1="120" y1="227" x2="120" y2="247" />
+        <circle class="jlp-axis-node" cx="120" cy="250" r="2.2" />
+      </g>
+
+
+      <!-- JLP FUTURISTIC PATCH v3 -->
+
+      <g id="jlp-v3-back">
+
+        <!-- linhas radiais -->
+        <line class="v3-ray" x1="120" y1="48" x2="120" y2="15"
+              transform="rotate(45 120 120)" />
+        <line class="v3-ray" x1="120" y1="48" x2="120" y2="15"
+              transform="rotate(135 120 120)" />
+        <line class="v3-ray" x1="120" y1="48" x2="120" y2="15"
+              transform="rotate(225 120 120)" />
+        <line class="v3-ray" x1="120" y1="48" x2="120" y2="15"
+              transform="rotate(315 120 120)" />
+
+        <!-- estrutura profunda -->
+        <circle class="v3-ring v3-deep v3-thin v3-a"
+                cx="120" cy="120" r="113"
+                stroke-dasharray="1 5 2 9" />
+
+        <circle class="v3-ring v3-blue v3-thin v3-b"
+                cx="120" cy="120" r="107"
+                stroke-dasharray="3 9 1 14" />
+
+        <circle class="v3-ring v3-deep v3-thin v3-c"
+                cx="120" cy="120" r="99"
+                stroke-dasharray="1 11 4 18" />
+
+        <circle class="v3-ring v3-blue v3-medium v3-b"
+                cx="120" cy="120" r="91"
+                stroke-dasharray="27 22 5 38" />
+
+        <circle class="v3-ring v3-deep v3-thin v3-a"
+                cx="120" cy="120" r="75"
+                stroke-dasharray="2 7 1 16" />
+
+        <!-- segmentos fortes -->
+        <circle class="v3-ring v3-cyan v3-heavy v3-c"
+                cx="120" cy="120" r="104"
+                stroke-dasharray="48 52 17 74"
+                stroke-dashoffset="28" />
+
+        <circle class="v3-ring v3-blue v3-heavy v3-b"
+                cx="120" cy="120" r="84"
+                stroke-dasharray="39 47 14 62"
+                stroke-dashoffset="13" />
+
+        <circle class="v3-ring v3-cyan v3-heavy v3-d"
+                cx="120" cy="120" r="64"
+                stroke-dasharray="31 46 10 55"
+                stroke-dashoffset="41" />
+
+        <!-- scan digital -->
+        <circle class="v3-ring v3-scan"
+                cx="120" cy="120" r="96" />
+
+        <circle class="v3-ring v3-scan"
+                cx="120" cy="120" r="72"
+                style="animation-direction:reverse;
+                       animation-duration:12s;
+                       opacity:.38" />
+
+        <!-- brackets -->
+        <path class="v3-bracket v3-bracket-hot"
+              d="M48 64 L48 52 L60 52" />
+
+        <path class="v3-bracket"
+              d="M180 52 L192 52 L192 64" />
+
+        <path class="v3-bracket"
+              d="M48 176 L48 188 L60 188" />
+
+        <path class="v3-bracket v3-bracket-hot"
+              d="M180 188 L192 188 L192 176" />
+
+        <!-- nós digitais -->
+        <circle class="v3-node" cx="120" cy="15" r="1.7" />
+        <circle class="v3-node" cx="225" cy="120" r="1.5" />
+        <circle class="v3-node-dim" cx="120" cy="225" r="1.4" />
+        <circle class="v3-node-dim" cx="15" cy="120" r="1.4" />
+
+        <circle class="v3-node" cx="185" cy="55" r="1.1" />
+        <circle class="v3-node-dim" cx="55" cy="185" r="1" />
+
+      </g>
+
+      <g id="jlp-particles"></g>
+      <g id="jlp-rings"></g>
+      <g id="jlp-ticks"></g>
+      <g id="jlp-dots"></g>
+
+      <circle class="v3-iris v3-iris-b"
+              cx="120" cy="120" r="39" />
+
+      <circle class="v3-iris v3-iris-a"
+              cx="120" cy="120" r="36" />
+
+      <circle id="jlp-core-halo" cx="120" cy="120" r="41" />
+      <circle id="jlp-core-disc" cx="120" cy="120" r="29" />
+      <circle class="jlp-core-ring-secondary" cx="120" cy="120" r="35" />
+      <circle class="jlp-core-ring" cx="120" cy="120" r="31.5" />
+
+      <path class="jlp-core-tech" d="M 91 101 A 34 34 0 0 1 102 89" />
+      <path class="jlp-core-tech" d="M 138 89 A 34 34 0 0 1 149 101" />
+      <path class="jlp-core-tech" d="M 149 139 A 34 34 0 0 1 138 151" />
+      <path class="jlp-core-tech" d="M 102 151 A 34 34 0 0 1 91 139" />
+    </svg>
+
+        <div id="hud-label" aria-label="JLP">
+
+      <svg
+        id="jlp-wordmark"
+        viewBox="0 0 120 48"
+        aria-hidden="true"
+      >
+
+        <!-- Estrutura escura permanente -->
+        <text
+          class="jlp-word jlp-word-base"
+          x="60"
+          y="34"
+          text-anchor="middle"
+        >JLP</text>
+
+        <!-- Linha principal animada -->
+        <text
+          class="jlp-word jlp-word-flow"
+          x="60"
+          y="34"
+          text-anchor="middle"
+        >JLP</text>
+
+        <!-- Pequenos impulsos luminosos -->
+        <text
+          class="jlp-word jlp-word-scan"
+          x="60"
+          y="34"
+          text-anchor="middle"
+        >JLP</text>
+
+      </svg>
+
+    </div>
+  </div>
+
+  <div id="hud-status">pronto</div>
+
+  <svg id="jlp-waveform" viewBox="0 0 200 28" aria-hidden="true">
+    <g id="jlp-wave-bars"></g>
+  </svg>
+</div>
+
 <div id="log"></div>
 <form id="form">
+  <button type="button" id="mic-btn" title="Falar (gravar pergunta)">&#127908;</button>
   <input type="text" id="input" autocomplete="off" placeholder="Fala com o JLP..." />
   <button type="submit">Enviar</button>
 </form>
@@ -111,6 +1476,15 @@
 </div>
 
 <script>
+  // Service worker: so pra satisfazer o criterio de "instalavel" do Chrome
+  // Android e dar uma sombra de cache do proprio shell - nunca cacheia
+  // /api/*, entao chat/voz sempre exigem rede de verdade.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
+
   const log = document.getElementById('log');
   const form = document.getElementById('form');
   const input = document.getElementById('input');
@@ -118,6 +1492,501 @@
   const gate = document.getElementById('gate');
   const gateForm = document.getElementById('gate-form');
   const gateInput = document.getElementById('gate-input');
+  const micBtn = document.getElementById('mic-btn');
+
+  // ============================================================
+  // JLP CINEMATIC CORE v2
+  // API pública preservada:
+  //   setJLPState(state)
+  //   setJLPAmplitude(0..1)
+  // ============================================================
+  const JLPCore = (function () {
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const root = document.getElementById('hud-circle');
+    const svg = document.getElementById('hud');
+    const label = document.getElementById('hud-label');
+    const statusEl = document.getElementById('hud-status');
+
+    const ringsGroup = document.getElementById('jlp-rings');
+    const ticksGroup = document.getElementById('jlp-ticks');
+    const dotsGroup = document.getElementById('jlp-dots');
+    const particlesGroup = document.getElementById('jlp-particles');
+
+    const coreDisc = document.getElementById('jlp-core-disc');
+    const coreHalo = document.getElementById('jlp-core-halo');
+    const waveBarsGroup = document.getElementById('jlp-wave-bars');
+
+    const CX = 120;
+    const CY = 120;
+
+    function polar(radius, deg) {
+      const angle = (deg - 90) * Math.PI / 180;
+      return {
+        x: CX + radius * Math.cos(angle),
+        y: CY + radius * Math.sin(angle),
+      };
+    }
+
+    function describeArc(radius, startDeg, endDeg) {
+      const start = polar(radius, endDeg);
+      const end = polar(radius, startDeg);
+      const sweep = Math.abs(endDeg - startDeg);
+      const largeArc = sweep <= 180 ? 0 : 1;
+
+      return [
+        'M', start.x.toFixed(2), start.y.toFixed(2),
+        'A', radius, radius, 0, largeArc, 0, end.x.toFixed(2), end.y.toFixed(2)
+      ].join(' ');
+    }
+
+    const RING_CONFIGS = [
+      {
+        r: 110, w: 0.75, dur: 92, dir: 1, op: 0.34, tone: 'deep',
+        segments: [[4, 35], [50, 77], [101, 134], [164, 208], [233, 257], [285, 330]]
+      },
+      {
+        r: 103, w: 1.05, dur: 54, dir: -1, op: 0.42, tone: 'blue',
+        segments: [[18, 66], [86, 115], [143, 174], [205, 246], [274, 309], [328, 351]],
+        accents: [0, 4]
+      },
+      {
+        r: 95, w: 2.6, dur: 37, dir: 1, op: 0.82, tone: 'blue',
+        segments: [[8, 34], [58, 102], [127, 153], [181, 224], [251, 283], [309, 344]],
+        accents: [1, 3]
+      },
+      {
+        r: 88, w: 0.8, dur: 68, dir: -1, op: 0.34, tone: 'deep',
+        segments: [[3, 52], [77, 109], [139, 187], [214, 260], [291, 333]]
+      },
+      {
+        r: 80, w: 1.55, dur: 29, dir: -1, op: 0.68, tone: 'blue',
+        segments: [[14, 45], [68, 124], [153, 178], [204, 238], [264, 318], [338, 356]],
+        accents: [1, 4]
+      },
+      {
+        r: 72, w: 0.75, dur: 76, dir: 1, op: 0.32, tone: 'deep',
+        segments: [[8, 70], [97, 131], [164, 215], [245, 281], [310, 344]]
+      },
+      {
+        r: 64, w: 2.0, dur: 21, dir: 1, op: 0.75, tone: 'blue',
+        segments: [[24, 71], [98, 137], [164, 199], [228, 272], [299, 337]],
+        accents: [0, 2, 4]
+      },
+      {
+        r: 56, w: 0.8, dur: 63, dir: -1, op: 0.36, tone: 'deep',
+        segments: [[5, 39], [66, 119], [148, 186], [218, 253], [283, 342]]
+      },
+      {
+        r: 48, w: 1.35, dur: 18, dir: -1, op: 0.65, tone: 'blue',
+        segments: [[20, 65], [94, 122], [154, 205], [235, 268], [296, 338]],
+        accents: [2]
+      },
+      {
+        r: 41, w: 0.7, dur: 48, dir: 1, op: 0.40, tone: 'deep',
+        segments: [[8, 71], [107, 161], [198, 244], [279, 344]]
+      }
+    ];
+
+    const ringEls = [];
+
+    function buildRings() {
+      RING_CONFIGS.forEach((cfg, layerIndex) => {
+        const layer = document.createElementNS(svgNS, 'g');
+        layer.setAttribute('class', 'jlp-ring-layer');
+        layer.style.animationName = cfg.dir > 0 ? 'spin' : 'spin-rev';
+        layer.style.animationTimingFunction = 'linear';
+        layer.style.animationIterationCount = 'infinite';
+        layer.style.animationDuration = cfg.dur + 's';
+        layer.style.animationDelay = (-cfg.dur * (layerIndex / 17)).toFixed(2) + 's';
+
+        cfg.segments.forEach((segment, segmentIndex) => {
+          const path = document.createElementNS(svgNS, 'path');
+          path.setAttribute('d', describeArc(cfg.r, segment[0], segment[1]));
+          path.setAttribute('stroke-width', cfg.w);
+
+          const isAccent = (cfg.accents || []).includes(segmentIndex);
+          const toneClass = cfg.tone === 'deep' ? 'jlp-ring-deep' : 'jlp-ring-blue';
+
+          path.setAttribute(
+            'class',
+            'jlp-ring-segment ' + toneClass + (isAccent ? ' jlp-ring-accent' : '')
+          );
+
+          path.style.opacity = isAccent
+            ? Math.min(0.94, cfg.op + 0.14).toFixed(2)
+            : cfg.op;
+
+          if (isAccent) {
+            path.setAttribute('stroke-width', (cfg.w * 1.12).toFixed(2));
+          }
+
+          layer.appendChild(path);
+        });
+
+        ringsGroup.appendChild(layer);
+        ringEls.push({ el: layer, base: cfg.dur });
+      });
+    }
+
+    const TICK_ANGLES = [
+      2, 11, 20, 31, 44, 58, 72, 88,
+      103, 118, 134, 151, 168, 184,
+      201, 219, 236, 253, 270, 286,
+      302, 316, 329, 341, 351
+    ];
+
+    function buildTicks() {
+      TICK_ANGLES.forEach((deg, i) => {
+        const isAccent = [3, 9, 15, 21].includes(i);
+        const isMajor = i % 4 === 0;
+
+        const rOuter = isAccent ? 116.5 : 115;
+        const rInner = isAccent ? 108 : isMajor ? 110 : 112;
+
+        const p1 = polar(rOuter, deg);
+        const p2 = polar(rInner, deg);
+
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('x1', p1.x.toFixed(2));
+        line.setAttribute('y1', p1.y.toFixed(2));
+        line.setAttribute('x2', p2.x.toFixed(2));
+        line.setAttribute('y2', p2.y.toFixed(2));
+        line.setAttribute('stroke-width', isAccent ? 1.15 : isMajor ? 0.9 : 0.65);
+        line.style.opacity = isAccent ? '0.72' : isMajor ? '0.38' : '0.20';
+        line.setAttribute('class', 'jlp-tick' + (isAccent ? ' jlp-tick-accent' : ''));
+
+        ticksGroup.appendChild(line);
+      });
+    }
+
+    const PARTICLE_COUNT = 22;
+
+    function buildParticles() {
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const angle = ((i * 137.508) % 360) * Math.PI / 180;
+        const radius = 49 + ((i * 29) % 58);
+        const x = CX + radius * Math.cos(angle);
+        const y = CY + radius * Math.sin(angle);
+
+        const dot = document.createElementNS(svgNS, 'circle');
+        dot.setAttribute('cx', x.toFixed(1));
+        dot.setAttribute('cy', y.toFixed(1));
+        dot.setAttribute('r', i % 5 === 0 ? '0.85' : '0.55');
+        dot.setAttribute('class', 'jlp-particle');
+        dot.style.animationDelay = ((i * 0.19) % 2.8).toFixed(2) + 's';
+        dot.style.animationDuration = (2.8 + (i % 6) * 0.37).toFixed(2) + 's';
+
+        particlesGroup.appendChild(dot);
+      }
+    }
+
+    const DOT_CONFIGS = [
+      { r: 95, speed: 1.35, angle: 0.2 },
+      { r: 80, speed: -1.95, angle: 2.1 },
+      { r: 64, speed: 2.55, angle: 4.3 },
+    ];
+
+    const dotEls = [];
+
+    function buildDots() {
+      DOT_CONFIGS.forEach((cfg) => {
+        const el = document.createElementNS(svgNS, 'circle');
+        el.setAttribute('r', 1.55);
+        el.setAttribute('class', 'jlp-dot');
+        dotsGroup.appendChild(el);
+        dotEls.push({ el, cfg });
+      });
+    }
+
+    const WAVE_BAR_COUNT = 24;
+    const waveBarEls = [];
+    const waveBarPhases = [];
+
+    function buildWaveform() {
+      if (!waveBarsGroup) return;
+
+      const slot = 200 / WAVE_BAR_COUNT;
+
+      for (let i = 0; i < WAVE_BAR_COUNT; i++) {
+        const rect = document.createElementNS(svgNS, 'rect');
+        rect.setAttribute('x', (i * slot + slot * 0.31).toFixed(2));
+        rect.setAttribute('width', (slot * 0.38).toFixed(2));
+        rect.setAttribute('rx', 0.8);
+        rect.setAttribute('class', 'jlp-wave-bar');
+
+        waveBarsGroup.appendChild(rect);
+        waveBarEls.push(rect);
+        waveBarPhases.push((i * 0.73) % (Math.PI * 2));
+      }
+    }
+
+    buildRings();
+    buildTicks();
+    buildParticles();
+    buildDots();
+    buildWaveform();
+
+    const STATUS_TEXT = {
+      idle: 'pronto',
+      listening: 'ouvindo',
+      thinking: 'processando',
+      speaking: 'falando',
+      alert: 'alerta',
+      error: 'erro',
+    };
+
+    const THINK_SPEED_MULT = 3.7;
+    const REACT_SPEED_MULT = 1.55;
+
+    let currentState = 'idle';
+
+    function applyRingSpeeds(state) {
+      const mult =
+        state === 'thinking' ? THINK_SPEED_MULT :
+        (state === 'listening' || state === 'speaking') ? REACT_SPEED_MULT :
+        state === 'error' ? 0.55 :
+        1;
+
+      ringEls.forEach((ring, index) => {
+        const variation = 1 + (index % 3) * 0.045;
+        ring.el.style.animationDuration =
+          (ring.base / mult * variation).toFixed(2) + 's';
+      });
+    }
+
+    function setState(state, statusText) {
+      if (!Object.prototype.hasOwnProperty.call(STATUS_TEXT, state)) return;
+
+      currentState = state;
+      root.dataset.state = state;
+      statusEl.textContent = statusText || STATUS_TEXT[state];
+      applyRingSpeeds(state);
+
+      if (state !== 'listening' && state !== 'speaking') {
+        targetAmplitude = 0;
+      }
+    }
+
+    let targetAmplitude = 0;
+    let currentAmplitude = 0;
+
+    function setAmplitude(value) {
+      targetAmplitude = Math.max(0, Math.min(1, value));
+    }
+
+    function applyAmplitude(amp) {
+      coreDisc.setAttribute('r', (29 + amp * 3.6).toFixed(1));
+      coreHalo.setAttribute('r', (41 + amp * 8).toFixed(1));
+      coreHalo.style.opacity = String(0.38 + amp * 0.34);
+
+      label.style.transform = 'scale(' + (1 + amp * 0.035).toFixed(3) + ')';
+
+      label.style.textShadow =
+        '0 0 ' + (7 + amp * 8).toFixed(0) +
+        'px rgba(34,211,255,' + (0.50 + amp * 0.28).toFixed(2) + '), ' +
+        '0 0 ' + (18 + amp * 20).toFixed(0) +
+        'px rgba(22,119,255,' + (0.16 + amp * 0.18).toFixed(2) + ')';
+
+      svg.style.filter =
+        'drop-shadow(0 0 ' + (4 + amp * 3).toFixed(0) +
+        'px rgba(34,211,255,' + (0.20 + amp * 0.16).toFixed(2) + ')) ' +
+        'drop-shadow(0 0 ' + (14 + amp * 8).toFixed(0) +
+        'px rgba(22,119,255,' + (0.10 + amp * 0.12).toFixed(2) + '))';
+    }
+
+    function resetAmplitudeStyles() {
+      coreDisc.setAttribute('r', '29');
+      coreHalo.setAttribute('r', '41');
+      coreHalo.style.opacity = '';
+      label.style.transform = '';
+      label.style.textShadow = '';
+      svg.style.filter = '';
+    }
+
+    let glitchTimer = 0;
+
+    function applyGlitch(dt) {
+      glitchTimer -= dt;
+      if (glitchTimer > 0) return;
+
+      glitchTimer = 110 + Math.random() * 200;
+      const dx = (Math.random() - 0.5) * 3;
+      const dy = (Math.random() - 0.5) * 3;
+
+      svg.style.transform =
+        'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px)';
+
+      window.setTimeout(() => {
+        svg.style.transform = '';
+      }, 55);
+    }
+
+    let lastTs = performance.now();
+
+    function tick(ts) {
+      const dt = ts - lastTs;
+      lastTs = ts;
+
+      currentAmplitude +=
+        (targetAmplitude - currentAmplitude) * 0.14;
+
+      if (currentAmplitude > 0.008) {
+        applyAmplitude(currentAmplitude);
+      } else if (currentAmplitude !== 0) {
+        currentAmplitude = 0;
+        resetAmplitudeStyles();
+      }
+
+      if (currentState === 'thinking') {
+        dotEls.forEach((d) => {
+          d.cfg.angle += (d.cfg.speed * dt) / 1000;
+
+          const x = CX + d.cfg.r * Math.cos(d.cfg.angle);
+          const y = CY + d.cfg.r * Math.sin(d.cfg.angle);
+
+          d.el.setAttribute('cx', x.toFixed(1));
+          d.el.setAttribute('cy', y.toFixed(1));
+        });
+      }
+
+      if (currentState === 'error') {
+        applyGlitch(dt);
+      }
+
+      const t = ts / 1000;
+
+      waveBarEls.forEach((rect, i) => {
+        const ambient =
+          currentState === 'idle'
+            ? 0.8 + Math.abs(Math.sin(t * 0.85 + waveBarPhases[i])) * 0.8
+            : 1.0;
+
+        const reactive =
+          currentAmplitude *
+          (5.5 + 10.5 * Math.abs(Math.sin(i * 0.92 + t * 4.1)));
+
+        const h = Math.max(1.2, ambient + reactive);
+
+        rect.setAttribute('height', h.toFixed(1));
+        rect.setAttribute('y', (14 - h / 2).toFixed(1));
+      });
+
+      requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+    setState('idle');
+
+    return {
+      setState,
+      setAmplitude,
+      getState: function () { return currentState; },
+    };
+  })();
+
+  function setJLPState(state, statusText) { JLPCore.setState(state, statusText); }
+  function setJLPAmplitude(value) { JLPCore.setAmplitude(value); }
+
+  // Flashes de alerta/erro: mostram o estado por um tempo e voltam pro
+  // idle sozinhos, a menos que outro estado ja tenha assumido antes.
+  function flashError(durationMs) {
+    setJLPState('error');
+    window.setTimeout(() => { if (JLPCore.getState() === 'error') setJLPState('idle'); }, durationMs || 1800);
+  }
+  function flashAlert(durationMs) {
+    setJLPState('alert');
+    window.setTimeout(() => { if (JLPCore.getState() === 'alert') setJLPState('idle'); }, durationMs || 1800);
+  }
+
+  // ============================================================
+  // Audio: reatividade real do nucleo ao volume, via Web Audio API
+  // (microfone no estado listening, voz sintetizada no speaking).
+  // ============================================================
+  let audioCtx = null;
+  function getAudioContext() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function computeAmplitude(analyser, buffer) {
+    analyser.getByteTimeDomainData(buffer);
+    let sumSquares = 0;
+    for (let i = 0; i < buffer.length; i++) {
+      const v = (buffer[i] - 128) / 128;
+      sumSquares += v * v;
+    }
+    return Math.min(1, Math.sqrt(sumSquares / buffer.length) * 4.5);
+  }
+
+  let micAnalyser = null;
+  let micBuffer = null;
+  let micLoopId = null;
+
+  function startMicAnalyser(stream) {
+    try {
+      const ctx = getAudioContext();
+      const source = ctx.createMediaStreamSource(stream);
+      micAnalyser = ctx.createAnalyser();
+      micAnalyser.fftSize = 256;
+      micBuffer = new Uint8Array(micAnalyser.fftSize);
+      source.connect(micAnalyser);
+      const loop = () => {
+        if (!micAnalyser) return;
+        setJLPAmplitude(computeAmplitude(micAnalyser, micBuffer));
+        micLoopId = requestAnimationFrame(loop);
+      };
+      loop();
+    } catch (err) {
+      // Sem suporte a Web Audio API - o nucleo so nao reage ao volume, a gravacao segue normal.
+    }
+  }
+
+  function stopMicAnalyser() {
+    if (micLoopId) cancelAnimationFrame(micLoopId);
+    micLoopId = null;
+    micAnalyser = null;
+    setJLPAmplitude(0);
+  }
+
+  let speakAnalyser = null;
+  let speakBuffer = null;
+  let speakLoopId = null;
+
+  // So pode criar o MediaElementAudioSourceNode uma unica vez por
+  // elemento <audio> - por isso o player e reaproveitado em toda fala.
+  function ensureSpeakAnalyser() {
+    if (speakAnalyser) return speakAnalyser;
+    try {
+      const ctx = getAudioContext();
+      const source = ctx.createMediaElementSource(player);
+      speakAnalyser = ctx.createAnalyser();
+      speakAnalyser.fftSize = 256;
+      speakBuffer = new Uint8Array(speakAnalyser.fftSize);
+      source.connect(speakAnalyser);
+      speakAnalyser.connect(ctx.destination);
+    } catch (err) {
+      speakAnalyser = null;
+    }
+    return speakAnalyser;
+  }
+
+  function startSpeakingAnalyser() {
+    const analyser = ensureSpeakAnalyser();
+    if (!analyser) return;
+    const loop = () => {
+      if (player.paused || player.ended) return;
+      setJLPAmplitude(computeAmplitude(analyser, speakBuffer));
+      speakLoopId = requestAnimationFrame(loop);
+    };
+    loop();
+  }
+
+  function stopSpeakingAnalyser() {
+    if (speakLoopId) cancelAnimationFrame(speakLoopId);
+    speakLoopId = null;
+    setJLPAmplitude(0);
+  }
 
   function getOrCreate(key, factory) {
     let value = localStorage.getItem(key);
@@ -131,6 +2000,30 @@
   const clientId = getOrCreate('jlpClientId', () => crypto.randomUUID());
   let token = localStorage.getItem('jlpToken');
   let tokenWaiters = [];
+  const player = new Audio();
+
+  async function falar(texto) {
+    try {
+      const resp = await fetch('/api/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-jlp-token': token },
+        body: JSON.stringify({ text: texto }),
+      });
+      if (!resp.ok) throw new Error('Falha ao gerar áudio.');
+
+      const blob = await resp.blob();
+      player.src = URL.createObjectURL(blob);
+      await player.play();
+    } catch (err) {
+      // Sem voz configurada (ou erro na API) - fica só no texto, sem travar o chat.
+      setJLPState('idle');
+    }
+  }
+
+  player.addEventListener('playing', () => { setJLPState('speaking'); startSpeakingAnalyser(); });
+  player.addEventListener('ended', () => { stopSpeakingAnalyser(); setJLPState('idle'); });
+  player.addEventListener('pause', () => { stopSpeakingAnalyser(); setJLPState('idle'); });
+  player.addEventListener('error', () => { stopSpeakingAnalyser(); setJLPState('idle'); });
 
   function addMessage(role, text) {
     const el = document.createElement('div');
@@ -178,24 +2071,101 @@
     return data;
   }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const message = input.value.trim();
+  async function enviarMensagem(message) {
     if (!message) return;
 
     await ensureToken();
     addMessage('user', message);
     input.value = '';
     input.disabled = true;
+    setJLPState('thinking', 'pensando');
 
     try {
       const data = await callApi('/api/chat', { message, clientId });
       addMessage('assistant', data.text);
+      falar(data.text);
     } catch (err) {
       addMessage('system', 'Erro: ' + err.message);
+      flashError();
     } finally {
       input.disabled = false;
       input.focus();
+    }
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    getAudioContext();
+    enviarMensagem(input.value.trim());
+  });
+
+  // Entrada por voz: grava, transcreve (ElevenLabs Scribe, mesma skill do
+  // modo voz do terminal) e envia como se tivesse sido digitado.
+  let recorder = null;
+  let recording = false;
+
+  async function iniciarGravacao() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const chunks = [];
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+    recorder.onstop = async () => {
+      stream.getTracks().forEach((track) => track.stop());
+      const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+      await transcreverEEnviar(blob);
+    };
+    recorder.start();
+    recording = true;
+    micBtn.textContent = String.fromCodePoint(0x23F9, 0xFE0F);
+    micBtn.classList.add('recording');
+    setJLPState('listening');
+    startMicAnalyser(stream);
+  }
+
+  function pararGravacao() {
+    recorder.stop();
+    recording = false;
+    micBtn.textContent = String.fromCodePoint(0x1F3A4);
+    micBtn.classList.remove('recording');
+    stopMicAnalyser();
+  }
+
+  async function transcreverEEnviar(blob) {
+    await ensureToken();
+    setJLPState('thinking', 'transcrevendo');
+
+    try {
+      const resp = await fetch('/api/transcribe', {
+        method: 'POST',
+        headers: { 'x-jlp-token': token, 'Content-Type': blob.type || 'audio/webm' },
+        body: blob,
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Erro ao transcrever.');
+
+      if (!data.text || !data.text.trim()) {
+        addMessage('system', 'Não entendi nada, tenta de novo.');
+        flashAlert();
+        return;
+      }
+
+      await enviarMensagem(data.text.trim());
+    } catch (err) {
+      addMessage('system', 'Erro: ' + err.message);
+      flashError();
+    }
+  }
+
+  micBtn.addEventListener('click', async () => {
+    getAudioContext();
+    if (recording) {
+      pararGravacao();
+      return;
+    }
+    try {
+      await iniciarGravacao();
+    } catch (err) {
+      addMessage('system', 'Não consegui acessar o microfone: ' + err.message);
     }
   });
 
@@ -205,8 +2175,10 @@
       await callApi('/api/reset', { clientId });
       log.innerHTML = '';
       addMessage('system', 'Memória desta conversa reiniciada.');
+      setJLPState('idle');
     } catch (err) {
       addMessage('system', 'Erro: ' + err.message);
+      flashError();
     }
   });
 

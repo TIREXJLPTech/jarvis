@@ -3,6 +3,7 @@ import express, { Express, NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { askJLP } from '../core/conversation';
 import { getOrCreateConversation, logMessage, updateSessionId } from '../core/memory';
+import { getElevenLabsClient } from '../core/elevenlabs';
 
 /**
  * Canal web do JLP (Fase 1) - mesma lógica de conversa/memória do Telegram,
@@ -60,6 +61,63 @@ export function createJlpWebApp(uiToken: string): Express {
       res.status(500).json({ error: 'Tive um problema para responder agora. Tente de novo em instantes.' });
     }
   });
+
+  app.post('/api/speak', chatLimiter, requireToken, async (req: Request, res: Response) => {
+    const { text } = req.body as { text?: string };
+    if (!text) {
+      res.status(400).json({ error: 'Campo "text" é obrigatório.' });
+      return;
+    }
+
+    try {
+      const client = getElevenLabsClient();
+      const voiceId = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
+      const stream = await client.textToSpeech.convert(voiceId, {
+        text,
+        modelId: 'eleven_multilingual_v2',
+        outputFormat: 'mp3_44100_128',
+      });
+
+      res.setHeader('Content-Type', 'audio/mpeg');
+      const reader = stream.getReader();
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(value);
+      }
+      res.end();
+    } catch (err) {
+      console.error('Erro ao gerar fala (ElevenLabs):', err);
+      res.status(500).json({ error: 'Não consegui gerar áudio agora.' });
+    }
+  });
+
+  app.post(
+    '/api/transcribe',
+    chatLimiter,
+    requireToken,
+    express.raw({ type: '*/*', limit: '15mb' }),
+    async (req: Request, res: Response) => {
+      if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+        res.status(400).json({ error: 'Áudio vazio.' });
+        return;
+      }
+
+      try {
+        const client = getElevenLabsClient();
+        const response = await client.speechToText.convert({
+          modelId: 'scribe_v2',
+          languageCode: 'por',
+          file: { data: req.body, filename: 'gravacao.webm', contentType: req.header('content-type') ?? 'audio/webm' },
+        });
+
+        res.json({ text: 'text' in response ? response.text : '' });
+      } catch (err) {
+        console.error('Erro ao transcrever áudio do canal web:', err);
+        res.status(500).json({ error: 'Não consegui transcrever o áudio agora.' });
+      }
+    },
+  );
 
   app.post('/api/reset', requireToken, async (req: Request, res: Response) => {
     const { clientId } = req.body as { clientId?: string };
