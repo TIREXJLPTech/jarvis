@@ -298,10 +298,13 @@ Esta é uma fase contínua (evolui junto com o uso real, sem "fim" definido).
       `src/core/backup.ts`) - snapshot JSON diário (3h) de todas as
       tabelas, mandado como arquivo pro José via Telegram. Sem
       `pg_dump`/binário externo - usa o Prisma Client
+- [x] Rate limiting no canal web (`express-rate-limit`) - 100 req/15min
+      geral em `/api`, 20 req/10min no `/api/chat` especificamente (é o
+      endpoint que custa dinheiro real, chamada ao Claude)
 - [ ] Acesso remoto seguro via Tailscale - adiado até ter um caso de uso
       real (quando o Home Assistant sair do modo demo local pra um hub de
       verdade, ou a camada de voz precisar de acesso remoto)
-- [ ] Logs de auditoria formais, rate limiting no canal web
+- [ ] Logs de auditoria formais
 - [ ] PWA (se necessário)
 
 ## Deploy no Railway

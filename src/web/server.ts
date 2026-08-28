@@ -1,5 +1,6 @@
 import path from 'node:path';
 import express, { Express, NextFunction, Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import { askJLP } from '../core/conversation';
 import { getOrCreateConversation, logMessage, updateSessionId } from '../core/memory';
 
@@ -13,7 +14,18 @@ import { getOrCreateConversation, logMessage, updateSessionId } from '../core/me
  */
 export function createJlpWebApp(uiToken: string): Express {
   const app = express();
+  // Necessário no Railway (atrás de proxy) pra express-rate-limit ler o IP
+  // real do cliente via X-Forwarded-For, em vez do IP do proxy pra todo mundo.
+  app.set('trust proxy', 1);
   app.use(express.json());
+
+  // Rate limiting (Fase 8): protege contra força bruta no token e abuso do
+  // endpoint de chat, que custa dinheiro real (chamada ao Claude).
+  app.use(
+    '/api',
+    rateLimit({ windowMs: 15 * 60 * 1000, limit: 100, standardHeaders: true, legacyHeaders: false }),
+  );
+  const chatLimiter = rateLimit({ windowMs: 10 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false });
   // Caminho a partir do cwd (raiz do projeto), não de __dirname: em produção
   // rodamos via ts-node direto (sem passo de build), então __dirname não
   // reflete a estrutura de pastas de forma confiável.
@@ -27,7 +39,7 @@ export function createJlpWebApp(uiToken: string): Express {
     next();
   };
 
-  app.post('/api/chat', requireToken, async (req: Request, res: Response) => {
+  app.post('/api/chat', chatLimiter, requireToken, async (req: Request, res: Response) => {
     const { message, clientId } = req.body as { message?: string; clientId?: string };
     if (!message || !clientId) {
       res.status(400).json({ error: 'Campos "message" e "clientId" são obrigatórios.' });
