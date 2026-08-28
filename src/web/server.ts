@@ -105,16 +105,21 @@ export function createJlpWebApp(uiToken: string): Express {
 
       try {
         const client = getElevenLabsClient();
+        // O content-type que vem do navegador pode trazer parametros de
+        // codec junto (ex: iOS/Safari manda "audio/mp4;codecs=mp4a.40.2"),
+        // que a API da ElevenLabs nao espera - usamos so o tipo base.
+        const contentType = (req.header('content-type') ?? 'audio/webm').split(';')[0].trim();
+        const extensao = contentType.split('/')[1] ?? 'webm';
         const response = await client.speechToText.convert({
           modelId: 'scribe_v2',
           languageCode: 'por',
-          file: { data: req.body, filename: 'gravacao.webm', contentType: req.header('content-type') ?? 'audio/webm' },
+          file: { data: req.body, filename: `gravacao.${extensao}`, contentType },
         });
 
         res.json({ text: 'text' in response ? response.text : '' });
       } catch (err) {
         console.error('Erro ao transcrever áudio do canal web:', err);
-        res.status(500).json({ error: 'Não consegui transcrever o áudio agora.' });
+        res.status(500).json({ error: `Não consegui transcrever o áudio agora: ${(err as Error).message}` });
       }
     },
   );

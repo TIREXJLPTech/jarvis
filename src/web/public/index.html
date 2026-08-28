@@ -2104,10 +2104,20 @@
   let recorder = null;
   let recording = false;
 
+  // Safari/iOS grava em audio/mp4 (nao audio/webm) e, dependendo da versao,
+  // deixar o MediaRecorder escolher sozinho pode dar um mimeType vazio -
+  // escolhe explicitamente o primeiro formato suportado pelo navegador.
+  function escolherMimeType() {
+    const candidatos = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg'];
+    if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+    return candidatos.find((tipo) => MediaRecorder.isTypeSupported(tipo)) || '';
+  }
+
   async function iniciarGravacao() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const chunks = [];
-    recorder = new MediaRecorder(stream);
+    const mimeType = escolherMimeType();
+    recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
     recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
     recorder.onstop = async () => {
       stream.getTracks().forEach((track) => track.stop());
@@ -2135,9 +2145,12 @@
     setJLPState('thinking', 'transcrevendo');
 
     try {
+      // Remove parametros de codec do content-type (ex: "audio/mp4;codecs=mp4a.40.2"
+      // do Safari) - a API da ElevenLabs espera so o tipo base.
+      const contentType = (blob.type || 'audio/webm').split(';')[0].trim();
       const resp = await fetch('/api/transcribe', {
         method: 'POST',
-        headers: { 'x-jlp-token': token, 'Content-Type': blob.type || 'audio/webm' },
+        headers: { 'x-jlp-token': token, 'Content-Type': contentType },
         body: blob,
       });
       const data = await resp.json();
