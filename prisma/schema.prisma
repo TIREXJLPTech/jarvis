@@ -123,3 +123,16 @@ model ProjectTask {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
+
+// Fase 8 - logs de auditoria formais: uma linha por skill chamada pelo JLP
+// (nome da tool + input recebido + resumo do resultado), pra ter rastro de
+// tudo que o assistente fez. Nao registra o conteudo da conversa em si (ja
+// coberto por Message) - foco em acoes/efeitos colaterais.
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String // nome da skill/tool, ex: "criar_lembrete", "rodar_script"
+  input     String? // args recebidos, serializados em JSON
+  outcome   String // "ok" | "erro"
+  summary   String? // resumo curto do resultado (truncado)
+  createdAt DateTime @default(now())
+}

@@ -59,7 +59,15 @@ Fase 5:
   buscam em **todos os repositorios do usuario** (qualifier `user:` da
   Search API), sem precisar listar nomes fixos. Tambem `listar_deploys`,
   via API GraphQL do Railway (`src/core/railway.ts`, token de time - ver
-  gotcha no README principal sobre `projects` vs `me { projects }`).
+  gotcha no README principal sobre `projects` vs `me { projects }`). E
+  `rodar_script` (`src/skills/dev/scripts.ts`) - roda um script LOCAL
+  PRE-APROVADO de uma lista fixa no codigo (`typecheck`, `build`,
+  `git_status`, via `child_process.execFile`) pra checar a saude do
+  projeto. E a unica excecao deliberada a regra "JLP e gerente, nao
+  executor" (ver `persona.ts` e `src/skills/projetos` abaixo) - o JLP
+  escolhe QUAL script pre-aprovado rodar, nunca QUE COMANDO rodar; nao
+  aceita texto arbitrario (o schema Zod e um `enum` fechado nos nomes da
+  lista).
 
 Fase 7:
 - **memoria** (`src/skills/memoria`) - `lembrar` e `buscar_memorias`, tabela
@@ -74,6 +82,12 @@ Fase 8:
 - **custos** (`src/skills/custos`) - `resumo_custos`, soma o `costUsd` (ja
   logado em `Message` desde a Fase 1) dos ultimos N dias, com total e
   media diaria.
+- **logs de auditoria** - nao e uma skill, e um wrapper: `comAuditoria()`
+  em `src/skills/index.ts` envolve o handler de TODAS as skills (via
+  `.map()` antes de `createSdkMcpServer`) e grava uma linha em `AuditLog`
+  (tabela Postgres) por chamada - nome da skill, input recebido (JSON),
+  sucesso/erro e um resumo do resultado. Falha de log nunca derruba a
+  skill (engolida em `src/core/audit.ts`).
 
 Além do blueprint original (pedido direto do José, 2026-08-27/28):
 - **financas** (`src/skills/financas`) - `registrar_gasto`, `listar_gastos`,
@@ -103,6 +117,13 @@ Fora das skills MCP:
   proprio Jose no Telegram - mesmo padrao de envio unico por dia do
   briefing (`AppState.lastBackupDate`). Sem `pg_dump`/binario externo de
   proposito - usa o Prisma Client, que ja conhece o schema.
+- `src/telegram/devAlerts.ts` checa a cada 5 min (Fase 5) se algum deploy
+  do Railway entrou em estado de falha (`FAILED`/`CRASHED`) ou se surgiu
+  PR novo no GitHub, e avisa no Telegram sem o Jose precisar perguntar.
+  Guarda o "ultimo estado visto" em `AppState` (`devAlertsLastDeployStatuses`,
+  `devAlertsSeenPrUrls`) - no primeiro run so grava a foto atual sem
+  alertar, pra nao notificar sobre coisas que ja existiam antes desse
+  recurso.
 
 Pra adicionar uma skill nova: criar a pasta com seu `tool()`, adicionar ao
 array `skills` em `src/skills/index.ts`, e pronto - o nome ja sai liberado

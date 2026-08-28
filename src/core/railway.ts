@@ -36,6 +36,7 @@ interface RailwayGraphQLResponse {
 }
 
 export interface DeployStatus {
+  id: string;
   project: string;
   service: string;
   status: string;
@@ -86,7 +87,7 @@ export async function listDeployStatuses(): Promise<DeployStatus[]> {
     for (const s of p.node.services.edges) {
       const dep = s.node.deployments.edges[0]?.node;
       if (dep) {
-        result.push({ project: p.node.name, service: s.node.name, status: dep.status, createdAt: dep.createdAt });
+        result.push({ id: dep.id, project: p.node.name, service: s.node.name, status: dep.status, createdAt: dep.createdAt });
       }
     }
   }

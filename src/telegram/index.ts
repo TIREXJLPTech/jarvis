@@ -3,6 +3,7 @@ import { createJlpBot } from './bot';
 import { startReminderScheduler } from './reminders';
 import { startMorningBriefing } from './briefing';
 import { startDailyBackup } from './backup';
+import { startDevAlerts } from './devAlerts';
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const ownerChatId = process.env.TELEGRAM_OWNER_CHAT_ID;
@@ -22,7 +23,8 @@ if (ownerChatId) {
   startReminderScheduler(bot, ownerChatId);
   startMorningBriefing(bot, ownerChatId);
   startDailyBackup(bot, ownerChatId);
-  console.log('✅ Checagem de lembretes, briefing matinal e backup diário ativos.');
+  startDevAlerts(bot, ownerChatId);
+  console.log('✅ Checagem de lembretes, briefing matinal, backup diário e alertas de dev ativos.');
 } else {
   console.warn('⚠️ TELEGRAM_OWNER_CHAT_ID não configurado - lembretes, briefing e backup não vão notificar. Use /id no bot pra descobrir o valor.');
 }
