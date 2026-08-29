@@ -239,7 +239,7 @@ antes, a compilação falha e trava o front-end inteiro (erro genérico
 `unknown_error` no console do navegador, tela fica presa em "A carregar...").
 Instalar esses dois pacotes do sistema resolve.
 
-## Fase 5 — Assistente de Desenvolvimento (GitHub + Railway prontos)
+## Fase 5 — Assistente de Desenvolvimento (concluída)
 
 - [x] Skills `listar_repositorios`, `listar_prs`, `listar_issues`,
       `listar_commits` (`src/skills/dev`), via GitHub REST API
@@ -249,8 +249,13 @@ Instalar esses dois pacotes do sistema resolve.
 - [x] Skill `listar_deploys` (`src/skills/dev`), via API GraphQL do Railway
       (`src/core/railway.ts`) - status do último deploy de cada serviço,
       em todos os projetos
-- [ ] Skill pra rodar/checar scripts locais com permissão explícita
-- [ ] Alertas proativos de eventos importantes
+- [x] Skill `rodar_script` (`src/skills/dev/scripts.ts`) - roda um script
+      local pré-aprovado de uma lista fixa (`typecheck`, `build`,
+      `git_status`), única exceção deliberada à regra "JLP é gerente, não
+      executor" (ver `persona.ts`)
+- [x] Alertas proativos de eventos importantes (`src/telegram/devAlerts.ts`)
+      - checa a cada 5 min deploy com falha no Railway ou PR novo no
+      GitHub, avisa no Telegram sem precisar perguntar
 
 Credenciais:
 ```
@@ -312,7 +317,7 @@ o primeiro caso de uso.
 
 Esta é uma fase contínua (evolui junto com o uso real, sem "fim" definido).
 
-## Fase 8 — Segurança, Mobilidade e Polimento (em andamento)
+## Fase 8 — Segurança, Mobilidade e Polimento (concluída, exceto Tailscale)
 
 - [x] Monitoramento de custo de API (`resumo_custos` -
       `src/skills/custos`) - soma o `costUsd` já logado desde a Fase 1
@@ -323,11 +328,16 @@ Esta é uma fase contínua (evolui junto com o uso real, sem "fim" definido).
 - [x] Rate limiting no canal web (`express-rate-limit`) - 100 req/15min
       geral em `/api`, 20 req/10min no `/api/chat` especificamente (é o
       endpoint que custa dinheiro real, chamada ao Claude)
-- [ ] Acesso remoto seguro via Tailscale - adiado até ter um caso de uso
-      real (quando o Home Assistant sair do modo demo local pra um hub de
-      verdade, ou a camada de voz precisar de acesso remoto)
-- [ ] Logs de auditoria formais
-- [ ] PWA (se necessário)
+- [x] Logs de auditoria formais - wrapper `comAuditoria()` em
+      `src/skills/index.ts` grava uma linha em `AuditLog` (Postgres) por
+      chamada de skill (nome, input, sucesso/erro, resumo do resultado)
+- [x] PWA (canal web) - `manifest.json`, `icon.svg`, `sw.js` (nunca
+      cacheia `/api/*`) - "Adicionar à Tela de Início" no celular, abre
+      em tela cheia sem barra do navegador
+- [ ] Acesso remoto seguro via Tailscale - adiado, sem caso de uso real
+      (o acesso mobile já foi resolvido via PWA/web; só voltaria a fazer
+      sentido se o Home Assistant sair do modo demo local pra um hub de
+      verdade)
 
 ## Além do blueprint — Controle de gastos pessoais
 
@@ -459,12 +469,13 @@ src/
     memory.ts        # memoria persistente por conversa (Prisma)
   telegram/          # canal Telegram (bot.ts) + reminders.ts (checagem de lembretes vencidos)
   web/                # canal web (Express + pagina estatica)
-  voice/              # camada de voz local (Fase 3) - STT/TTS ElevenLabs, wake word Porcupine
+  voice/              # camada de voz local (Fase 3) - STT/TTS ElevenLabs, wake word Porcupine ou openWakeWord
   skills/             # capacidades plugaveis (hora, clima, lembretes, notas, calendario, email, casa, dev, memoria, custos, financas, projetos, ...)
 scripts/
   test-anthropic.ts
   google-auth-setup.ts
   microsoft-auth-setup.ts
+  wake_word/          # detect.py (ponte com o Node) + modelo custom "Hey JLP" (models/) - training_pipeline/ nao versionado, ver .gitignore
 docs/
   POLITICA-DADOS.md
 ```
@@ -474,5 +485,5 @@ docs/
 O detalhamento de todas as fases está no blueprint mantido junto com este
 projeto no Claude. Resumo do que falta: Fase 6 — monitoramento de sistemas
 da Irapuru, bloqueada até aprovação de segurança/TI (ver
-`docs/POLITICA-DADOS.md`); resto da Fase 8 — Tailscale, logs de auditoria
-formais, rate limiting, PWA.
+`docs/POLITICA-DADOS.md`); da Fase 8, só falta Tailscale (adiado, sem caso
+de uso real). Todo o resto das 9 fases (1-5, 7, 8) está concluído.
