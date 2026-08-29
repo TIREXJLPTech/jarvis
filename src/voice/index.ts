@@ -158,7 +158,7 @@ async function main() {
   if (usandoPorcupine) {
     console.log('✅ JLP ouvindo. Diga "Jarvis" pra começar. Ctrl+C pra encerrar.');
   } else if (usandoOpenWakeWord) {
-    console.log('✅ JLP ouvindo (openWakeWord). Diga "Hey Jarvis" pra começar. Ctrl+C pra encerrar.');
+    console.log('✅ JLP ouvindo (openWakeWord). Diga "Hey JLP" pra começar. Ctrl+C pra encerrar.');
   } else {
     console.log('✅ JLP em modo push-to-talk (nenhum wake word configurado).');
     console.log('   Aperte Enter, fale, e espere o silêncio. Ctrl+C pra encerrar.');
