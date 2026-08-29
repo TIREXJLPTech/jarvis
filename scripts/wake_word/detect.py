@@ -54,6 +54,12 @@ def main() -> None:
             scores = model.predict(frame)
             score = scores.get(MODEL_NAME, 0.0)
 
+            # Diagnostico temporario: mostra no console (stderr, nao
+            # interfere no canal de deteccao) qualquer score que sair do
+            # ruido de fundo, pra calibrar o limiar com voz real.
+            if score > 0.03:
+                print(f"[debug] score={score:.3f}", file=sys.stderr, flush=True)
+
             if score > THRESHOLD:
                 print("WAKE", flush=True)
                 model.reset()  # evita disparo repetido pro mesmo trecho de audio
