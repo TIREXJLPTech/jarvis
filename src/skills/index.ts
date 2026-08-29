@@ -9,6 +9,7 @@ import { listarEmailsSkill } from './email';
 import { listarDispositivosSkill, controlarDispositivoSkill } from './casa';
 import { listarRepositoriosSkill, listarPrsSkill, listarIssuesSkill, listarCommitsSkill, listarDeploysSkill } from './dev';
 import { rodarScriptSkill } from './dev/scripts';
+import { buscarFotoSkill } from './imagem';
 import { lembrarSkill, buscarMemoriasSkill } from './memoria';
 import { resumoCustosSkill } from './custos';
 import { registrarGastoSkill, listarGastosSkill, resumoGastosSkill, definirLimiteCartaoSkill, limiteDisponivelSkill } from './financas';
@@ -42,6 +43,7 @@ const skills = [
   listarCommitsSkill,
   listarDeploysSkill,
   rodarScriptSkill,
+  buscarFotoSkill,
   lembrarSkill,
   buscarMemoriasSkill,
   resumoCustosSkill,

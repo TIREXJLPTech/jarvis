@@ -106,6 +106,16 @@ Além do blueprint original (pedido direto do José, 2026-08-27/28):
   `src/core/conversation.ts`). Tarefas atrasadas tambem entram no briefing
   matinal (`src/telegram/briefing.ts`), pra cobrança proativa.
 
+Além do blueprint original (pedido do José, 2026-08-29):
+- **imagem** (`src/skills/imagem`) - `buscar_foto`, via API REST da
+  Wikipedia (`src/core/wikipedia.ts`, gratuito, sem API key). Só acha foto
+  de assuntos com página própria na Wikipedia (pessoas públicas, lugares,
+  animais...) - não serve pra pessoas privadas ou perfis específicos de
+  rede social. Retorna a URL direta da imagem; `src/core/imageReply.ts`
+  (`extractImageUrl`) detecta essa URL na resposta final e os canais
+  (Telegram via `ctx.replyWithPhoto`, web via `<img>` em `index.html`)
+  mostram a foto de verdade em vez de só o link em texto.
+
 Fora das skills MCP:
 - `src/telegram/briefing.ts` monta e manda um briefing diario (clima +
   lembretes) as 7h, reaproveitando os handlers de `clima` e

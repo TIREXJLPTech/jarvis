@@ -1,6 +1,7 @@
 import { Telegraf } from 'telegraf';
 import { askJLP } from '../core/conversation';
 import { getOrCreateConversation, logMessage, updateSessionId, setState } from '../core/memory';
+import { extractImageUrl } from '../core/imageReply';
 
 export function createJlpBot(token: string): Telegraf {
   const bot = new Telegraf(token);
@@ -38,7 +39,12 @@ export function createJlpBot(token: string): Telegraf {
       await logMessage(conversation.id, 'user', ctx.message.text);
       await logMessage(conversation.id, 'assistant', reply.text, reply.costUsd);
 
-      await ctx.reply(reply.text);
+      const imageUrl = extractImageUrl(reply.text);
+      if (imageUrl) {
+        await ctx.replyWithPhoto(imageUrl, { caption: reply.text.slice(0, 1024) });
+      } else {
+        await ctx.reply(reply.text);
+      }
     } catch (err) {
       console.error('Erro ao processar mensagem do Telegram:', err);
       await ctx.reply('Tive um problema para responder agora. Tente de novo em instantes.');

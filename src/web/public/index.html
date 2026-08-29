@@ -2067,10 +2067,33 @@
   player.addEventListener('pause', () => { if (primerTocando) return; stopSpeakingAnalyser(); setJLPState('idle'); });
   player.addEventListener('error', () => { if (primerTocando) return; stopSpeakingAnalyser(); setJLPState('idle'); });
 
+  // Reconhece uma URL de imagem direta no texto - a persona instrui o JLP a
+  // sempre incluir a URL completa quando mencionar uma foto, entao a gente
+  // detecta e mostra a imagem de verdade em vez de so o link em texto.
+  function extractImageUrl(text) {
+    const match = text.match(/https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp)(?:\?\S*)?/i);
+    return match ? match[0] : null;
+  }
+
   function addMessage(role, text) {
     const el = document.createElement('div');
     el.className = 'msg ' + role;
-    el.textContent = text;
+
+    const imageUrl = role === 'assistant' ? extractImageUrl(text) : null;
+    if (imageUrl) {
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.alt = 'Imagem';
+      img.style.cssText = 'max-width:100%;border-radius:8px;display:block;margin-bottom:0.4rem;';
+      el.appendChild(img);
+      const caption = document.createElement('div');
+      caption.style.whiteSpace = 'pre-wrap';
+      caption.textContent = text;
+      el.appendChild(caption);
+    } else {
+      el.textContent = text;
+    }
+
     log.appendChild(el);
     log.scrollTop = log.scrollHeight;
   }
