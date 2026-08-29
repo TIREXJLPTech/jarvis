@@ -4,3 +4,9 @@ dist/
 .env.local
 *.log
 .DS_Store
+
+# Ferramenta de treino da wake word (clone externo com seu proprio .git,
+# datasets e artefatos intermediarios - nao faz parte do projeto). O
+# modelo final treinado fica em scripts/wake_word/models/, esse sim
+# versionado.
+scripts/wake_word/training_pipeline/

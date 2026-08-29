@@ -1,6 +1,8 @@
 """
-Detector de wake word "hey jarvis" via openWakeWord (Fase 3, alternativa ao
-Picovoice depois que o trial gratuito deles foi negado de vez).
+Detector de wake word "hey jlp" via openWakeWord (Fase 3) - modelo
+customizado treinado localmente (RTX 3050, pipeline em
+scripts/wake_word/training_pipeline), depois que a Picovoice negou de vez
+o trial gratuito do "Jarvis" original.
 
 Não acessa o microfone sozinho: recebe audio PCM int16 mono 16kHz cru via
 stdin (o processo Node em src/voice/index.ts que grava e alimenta este
@@ -12,6 +14,7 @@ Dependencias: pip install -r scripts/wake_word/requirements.txt
 """
 
 import sys
+from pathlib import Path
 
 import numpy as np
 import openwakeword
@@ -24,13 +27,17 @@ WINDOW_SAMPLES = 1280
 WINDOW_BYTES = WINDOW_SAMPLES * 2
 THRESHOLD = 0.5
 
+MODEL_NAME = "hey_jlp"
+MODEL_PATH = Path(__file__).resolve().parent / "models" / f"{MODEL_NAME}.onnx"
+
 
 def main() -> None:
-    # Baixa os pesos pre-treinados na primeira execucao (fica em cache local
-    # depois disso, nao baixa de novo nas proximas vezes).
+    # Baixa os modelos auxiliares (melspectrogram/embedding) na primeira
+    # execucao, se ainda nao estiverem em cache local - o modelo da wake
+    # word em si (hey_jlp.onnx) e o customizado, carregado do disco abaixo.
     openwakeword.utils.download_models()
 
-    model = Model(wakeword_models=["hey_jarvis"], inference_framework="onnx")
+    model = Model(wakeword_models=[str(MODEL_PATH)], inference_framework="onnx")
     buffer = b""
 
     while True:
@@ -45,7 +52,7 @@ def main() -> None:
 
             frame = np.frombuffer(window_bytes, dtype=np.int16)
             scores = model.predict(frame)
-            score = scores.get("hey_jarvis", 0.0)
+            score = scores.get(MODEL_NAME, 0.0)
 
             if score > THRESHOLD:
                 print("WAKE", flush=True)
